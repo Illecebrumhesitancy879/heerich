@@ -525,8 +525,7 @@ button:hover {
   border-top: 1px solid var(--line);
 }
 
-.camera-panel .camera-grid-header,
-.camera-panel .camera-grid-labels {
+.camera-panel .camera-grid-header {
   display: flex;
   justify-content: space-between;
   gap: 0.8rem;
@@ -544,12 +543,6 @@ button:hover {
 .camera-panel .camera-grid-separator {
   opacity: 0.5;
   padding: 0 0.35em;
-}
-
-.camera-panel .camera-grid-labels {
-  margin-top: 0.45rem;
-  font-size: 0.72rem;
-  color: color-mix(in oklab, var(--text) 60%, var(--bg) 40%);
 }
 
 .camera-panel .camera-grid {
