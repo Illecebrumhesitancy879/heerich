@@ -55,12 +55,12 @@
             <option value="perspective">perspective</option>
           </select>
         </label>
-        <label>
+        <label id="cam-angle-label">
           <span>Angle</span>
           <input type="range" id="cam-angle" min="0" max="360" value="315" />
           <span class="value">315</span>
         </label>
-        <label>
+        <label id="cam-y-label">
           <span>Cam Y</span>
           <input
             type="range"
@@ -72,6 +72,25 @@
           />
           <span class="value">5</span>
         </label>
+        <div class="camera-grid-panel" id="cam-perspective-control" hidden>
+          <div class="camera-grid-header">
+            <span>Perspective</span>
+            <span class="camera-grid-values"
+              ><span id="cam-grid-angle-value">315</span>
+              <span class="camera-grid-separator">/</span>
+              <span id="cam-grid-y-value">5</span></span
+            >
+          </div>
+          <div class="camera-grid" id="cam-grid">
+            <i class="camera-grid__indicator"></i>
+            <i class="camera-grid__dot"></i>
+            <i class="camera-grid__center"></i>
+          </div>
+          <div class="camera-grid-labels" aria-hidden="true">
+            <span>angle</span>
+            <span>cam y</span>
+          </div>
+        </div>
         <label>
           <span>Distance</span>
           <input type="range" id="cam-dist" min="1" max="80" value="10" />

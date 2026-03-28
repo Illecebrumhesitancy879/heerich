@@ -68,9 +68,77 @@ const camProj = document.getElementById("cam-proj");
 const camAngle = document.getElementById("cam-angle");
 const camDist = document.getElementById("cam-dist");
 const camY = document.getElementById("cam-y");
+const camAngleLabel = document.getElementById("cam-angle-label");
+const camYLabel = document.getElementById("cam-y-label");
+const camPerspectiveControl = document.getElementById(
+  "cam-perspective-control",
+);
+const camGrid = document.getElementById("cam-grid");
+const camGridAngleValue = document.getElementById("cam-grid-angle-value");
+const camGridYValue = document.getElementById("cam-grid-y-value");
 const camStroke = document.getElementById("cam-stroke");
 const camStrokeColor = document.getElementById("cam-stroke-color");
 const camFill = document.getElementById("cam-fill");
+
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value));
+}
+
+function roundToStep(value, min, step) {
+  if (!step || step <= 0) return value;
+  const rounded = min + Math.round((value - min) / step) * step;
+  return Number(rounded.toFixed(4));
+}
+
+function updatePerspectiveGrid() {
+  const angleMin = parseFloat(camAngle.min) || 0;
+  const angleMax = parseFloat(camAngle.max) || 360;
+  const camYMin = parseFloat(camY.min) || -10;
+  const camYMax = parseFloat(camY.max) || 20;
+  const angleValue = parseFloat(camAngle.value) || angleMin;
+  const camYValue = parseFloat(camY.value) || camYMin;
+  const x = ((angleValue - angleMin) / (angleMax - angleMin)) * 100;
+  const y = (1 - (camYValue - camYMin) / (camYMax - camYMin)) * 100;
+  const dx = x - 50;
+  const dy = y - 50;
+  const distance = Math.sqrt(dx * dx + dy * dy);
+  const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+
+  camGrid.style.setProperty("--x", `${x}%`);
+  camGrid.style.setProperty("--y", `${y}%`);
+  camGrid.style.setProperty("--distance", `${distance}%`);
+  camGrid.style.setProperty("--angle", `${angle}deg`);
+  camGridAngleValue.textContent = camAngle.value;
+  camGridYValue.textContent = camY.value;
+}
+
+function setPerspectiveFromGrid(clientX, clientY) {
+  const rect = camGrid.getBoundingClientRect();
+  const x = clamp((clientX - rect.left) / rect.width, 0, 1);
+  const y = clamp((clientY - rect.top) / rect.height, 0, 1);
+  const angleMin = parseFloat(camAngle.min) || 0;
+  const angleMax = parseFloat(camAngle.max) || 360;
+  const angleStep = parseFloat(camAngle.step) || 1;
+  const camYMin = parseFloat(camY.min) || -10;
+  const camYMax = parseFloat(camY.max) || 20;
+  const camYStep = parseFloat(camY.step) || 1;
+
+  const angleValue = roundToStep(
+    angleMin + x * (angleMax - angleMin),
+    angleMin,
+    angleStep,
+  );
+  const camYValue = roundToStep(
+    camYMax - y * (camYMax - camYMin),
+    camYMin,
+    camYStep,
+  );
+
+  camAngle.value = String(angleValue);
+  camY.value = String(camYValue);
+  updatePerspectiveGrid();
+  rerenderAll();
+}
 
 function getCamera() {
   const proj = camProj.value;
@@ -135,20 +203,41 @@ function rerenderAll() {
   scheduleFaviconUpdate();
 }
 
-const camYLabel = camY.closest("label");
-function syncCamYVisibility() {
-  camYLabel.style.display = camProj.value === "perspective" ? "" : "none";
+function syncCameraControlVisibility() {
+  const perspective = camProj.value === "perspective";
+  camAngleLabel.style.display = perspective ? "none" : "";
+  camYLabel.style.display = "none";
+  camPerspectiveControl.hidden = !perspective;
+  updatePerspectiveGrid();
 }
-syncCamYVisibility();
+syncCameraControlVisibility();
 
 [camProj, camAngle, camY, camDist].forEach((el) => {
   const evt = el.tagName === "SELECT" ? "change" : "input";
   el.addEventListener(evt, () => {
     const span = el.parentElement.querySelector(".value");
     if (span) span.textContent = el.value;
-    if (el === camProj) syncCamYVisibility();
+    if (el === camProj) syncCameraControlVisibility();
+    if (el === camAngle || el === camY) updatePerspectiveGrid();
     rerenderAll();
   });
+});
+
+camGrid.addEventListener("pointerdown", (event) => {
+  event.preventDefault();
+  setPerspectiveFromGrid(event.clientX, event.clientY);
+
+  const onPointerMove = (moveEvent) => {
+    setPerspectiveFromGrid(moveEvent.clientX, moveEvent.clientY);
+  };
+
+  const onPointerUp = () => {
+    document.removeEventListener("pointermove", onPointerMove);
+    document.removeEventListener("pointerup", onPointerUp);
+  };
+
+  document.addEventListener("pointermove", onPointerMove);
+  document.addEventListener("pointerup", onPointerUp);
 });
 
 // ─── Helper: wire up a demo's controls and render loop ───
