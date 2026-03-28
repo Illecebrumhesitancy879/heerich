@@ -919,7 +919,7 @@ galleryDemo("demo-heerich-checker", () => {
         const ny = -y / s;
         const nz = z / s;
         return (
-          nx * nx + (1.25 * ny - Math.sqrt(Math.abs(nx))) ** 2 + nz * nz <= 1
+          nx * nx + (1.3 * ny - Math.sqrt(Math.abs(nx))) ** 2 + nz * nz <= 1
         );
       },
     });
