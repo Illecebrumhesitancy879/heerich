@@ -551,7 +551,7 @@ button:hover {
   --distance: 37.5%;
   --angle: 0deg;
   position: relative;
-  width: min(100%, 10rem);
+  width: 100%;
   aspect-ratio: 1;
   background-color: var(--bg);
   background-image:
