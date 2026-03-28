@@ -43,6 +43,11 @@ document.querySelectorAll('input[type="range"]').forEach(enhanceRange);
 
 // ─── Show camera panel when Boxes section is reached ───
 const panel = document.getElementById("camera-panel");
+
+// Collapse settings by default on mobile
+if (window.matchMedia("(max-width: 56rem)").matches) {
+  panel.removeAttribute("open");
+}
 const boxesSection = document.getElementById("boxes");
 new IntersectionObserver(
   ([entry]) => {

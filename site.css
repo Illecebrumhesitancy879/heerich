@@ -114,6 +114,11 @@ article {
   .section-full {
     max-width: none;
   }
+
+  h2,
+  pre {
+    width: 100%;
+  }
 }
 
 .intro {
@@ -448,10 +453,36 @@ button:hover {
   pointer-events: auto;
 }
 
-.camera-panel .camera-title {
+.camera-panel summary.camera-title {
   font-family: "Aboreto", cursive;
   font-size: 0.8rem;
   padding: 0.6rem 0.8rem;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.camera-panel summary.camera-title::-webkit-details-marker {
+  display: none;
+}
+
+.camera-panel summary.camera-title::after {
+  content: " −";
+}
+
+.camera-panel:not([open]) summary.camera-title::after {
+  content: " +";
+}
+
+.camera-panel .camera-section-title {
+  font-family: "Aboreto", cursive;
+  font-size: 0.8rem;
+  padding: 0.6rem 0.8rem;
+  border-top: 1px solid var(--line);
 }
 
 .camera-panel .camera-fields {
