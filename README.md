@@ -303,6 +303,12 @@ Note: functional styles (callbacks) cannot be serialized and will be omitted wit
 - **z** — depth (front/back)
 - Valid range: **-512 to 511** on each axis
 
+## Acknowledgements
+
+Shape calculations for lines and spheres are based on the excellent guides by Red Blob Games:
+- [Line drawing on a grid](https://www.redblobgames.com/grids/line-drawing/)
+- [Circle/sphere drawing on a grid](https://www.redblobgames.com/grids/circle-drawing/)
+
 ## License
 
 MIT
