@@ -499,15 +499,13 @@ setupDemo("demo-queries", (v) => {
     for (let z = s - 1; z >= 0; z--) {
       for (let y = 0; y < s; y++) {
         for (let x = 0; x < s; x++) {
-          const c = Math.floor(s / 2);
           const letter = word[i % word.length];
-          const isCenter = x === c && y === c && z === c;
 
           e.addBox({
             position: [x, y, z],
             size: [1, 1, 1],
             opaque: false,
-            content: `<text font-family="Aboreto" font-size="16" fill="var(--stroke-c)" style="opacity: calc(var(--z) / 6)" text-anchor="middle" dominant-baseline="central">${letter.toUpperCase()}</text>`,
+            content: `<text font-family="Aboreto" font-size="16" fill="var(--stroke-c)" text-anchor="middle" dominant-baseline="central">${letter.toUpperCase()}</text>`,
           });
           i++;
         }
