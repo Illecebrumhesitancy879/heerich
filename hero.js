@@ -1,6 +1,6 @@
 import { Heerich } from "./src/heerich.js";
 
-export function initHero(container, getCamera) {
+export function initHero(container, getCamera, getReservedZone = null) {
   let animationId = 0;
   let holes = [];
   let scene = null; // { engine, holes with targetDepth }
@@ -9,7 +9,7 @@ export function initHero(container, getCamera) {
     return min + Math.floor(Math.random() * (max - min + 1));
   }
 
-  function buildScene(depths) {
+  function buildScene(depths, towerHeights = null) {
     const cam = getCamera();
     const availW = container.clientWidth;
     const availH = container.clientHeight;
@@ -17,6 +17,20 @@ export function initHero(container, getCamera) {
     const gridSize = Math.round((availW * gridPct) / 100);
     const cols = Math.ceil(availW / gridSize);
     const rows = Math.ceil(availH / gridSize);
+    
+    // Get dynamic reserved zone in grid coordinates
+    let reservedZone = null;
+    if (getReservedZone) {
+      const zone = getReservedZone();
+      if (zone) {
+        reservedZone = {
+          x: Math.floor(zone.x / gridSize),
+          y: Math.floor(zone.y / gridSize),
+          w: Math.ceil(zone.width / gridSize),
+          h: Math.ceil(zone.height / gridSize),
+        };
+      }
+    }
 
     const e = new Heerich({
       tile: [gridSize, gridSize],
@@ -28,9 +42,23 @@ export function initHero(container, getCamera) {
       },
     });
 
-    // Solid slab — deep enough for all holes
+    // Solid slab — deep enough for all holes, with cutout for reserved zone
     const maxDepth = Math.max(...depths.map((d) => Math.round(d)), 1);
-    e.addBox({ position: [0, 0, 0], size: [cols, rows, maxDepth] });
+    e.addWhere({
+      bounds: [
+        [0, 0, 0],
+        [cols, rows, maxDepth],
+      ],
+      test: (x, y, z) => {
+        // Skip entire area below reserved zone if provided (e.g., title area)
+        if (reservedZone && 
+            x >= reservedZone.x && x < reservedZone.x + reservedZone.w &&
+            y >= reservedZone.y) {
+          return false;
+        }
+        return true;
+      },
+    });
 
     // Carve holes
     scene.holes.forEach((h, i) => {
@@ -61,6 +89,28 @@ export function initHero(container, getCamera) {
               bottom: { fill: `rgb(${r},${g},${b})` },
               back: { fill: `rgb(${r},${g},${b})` },
             },
+          });
+        }
+      });
+    }
+
+    // Add towers if provided (skip those below reserved zone)
+    if (towerHeights && scene.towers) {
+      scene.towers.forEach((tower, idx) => {
+        const currentHeight = Math.round(towerHeights[idx]);
+        if (currentHeight > 0) {
+          // Skip towers in or below reserved zone
+          if (reservedZone && 
+              tower.x >= reservedZone.x && tower.x < reservedZone.x + reservedZone.w &&
+              tower.y >= reservedZone.y) {
+            return;
+          }
+          
+          const holeDepth = Math.round(depths[tower.holeIndex]);
+          const towerStartZ = holeDepth - currentHeight;
+          e.addBox({ 
+            position: [tower.x, tower.y, towerStartZ], 
+            size: [1, 1, currentHeight] 
           });
         }
       });
@@ -114,20 +164,54 @@ export function initHero(container, getCamera) {
     const m = Math.max(...color);
     if (m > 0) color.forEach((_, i) => (color[i] /= m));
 
+    // Generate towers for each hole
+    const towers = [];
+    holes.forEach((h, holeIndex) => {
+      const numTowers = rand(2, 3);
+      const towerPositions = new Set();
+      const tallTowerIndex = rand(0, numTowers - 1); // One tower can be taller
+      
+      for (let t = 0; t < numTowers; t++) {
+        const margin = Math.max(1, Math.floor(Math.min(h.w, h.h) * 0.1));
+        const tx = h.x + rand(margin, Math.max(margin, h.w - margin - 1));
+        const ty = h.y + rand(margin, Math.max(margin, h.h - margin - 1));
+        const key = `${tx},${ty}`;
+        
+        if (towerPositions.has(key)) continue;
+        towerPositions.add(key);
+        
+        // One tower can grow taller than the hole depth
+        const isTall = t === tallTowerIndex;
+        const maxHeight = isTall 
+          ? Math.floor(h.targetDepth * 1.15) 
+          : Math.floor(h.targetDepth * 0.8);
+        const targetHeight = rand(Math.floor(h.targetDepth * 0.3), maxHeight);
+        towers.push({ x: tx, y: ty, holeIndex, targetHeight });
+      }
+    });
+
     scene = {
       gridPct,
       holes,
       colorWalls: Math.random() < 0.5,
       color,
+      towers,
     };
   }
 
   function animateIn() {
     const id = ++animationId;
-    const targets = scene.holes.map((h) => h.targetDepth);
-    const duration = 800;
-    const stagger = 200;
+    const holeTargets = scene.holes.map((h) => h.targetDepth);
+    const towerTargets = scene.towers.map((t) => t.targetHeight);
+    const holeDuration = 800;
+    const holeStagger = 200;
+    const towerDuration = 600;
+    const towerStagger = 80;
     const startTime = performance.now();
+    
+    // Delay towers until holes finish
+    const holeEndTime = holeDuration + (scene.holes.length - 1) * holeStagger;
+    const towerStartDelay = holeEndTime + 200;
 
     function ease(t) {
       return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
@@ -137,18 +221,29 @@ export function initHero(container, getCamera) {
       if (id !== animationId) return;
       let allDone = true;
 
-      const depths = targets.map((target, i) => {
-        const elapsed = now - startTime - i * stagger;
+      const depths = holeTargets.map((target, i) => {
+        const elapsed = now - startTime - i * holeStagger;
         if (elapsed <= 0) {
           allDone = false;
           return 0;
         }
-        if (elapsed >= duration) return target;
+        if (elapsed >= holeDuration) return target;
         allDone = false;
-        return target * ease(elapsed / duration);
+        return target * ease(elapsed / holeDuration);
       });
 
-      container.innerHTML = buildScene(depths);
+      const towerHeights = towerTargets.map((target, i) => {
+        const elapsed = now - startTime - towerStartDelay - i * towerStagger;
+        if (elapsed <= 0) {
+          allDone = false;
+          return 0;
+        }
+        if (elapsed >= towerDuration) return target;
+        allDone = false;
+        return target * ease(elapsed / towerDuration);
+      });
+
+      container.innerHTML = buildScene(depths, towerHeights);
       if (!allDone) requestAnimationFrame(step);
     }
 
@@ -163,7 +258,8 @@ export function initHero(container, getCamera) {
   function updateCamera() {
     if (!scene) return;
     const depths = scene.holes.map((h) => h.targetDepth);
-    container.innerHTML = buildScene(depths);
+    const towerHeights = scene.towers.map((t) => t.targetHeight);
+    container.innerHTML = buildScene(depths, towerHeights);
   }
 
   function repaint() {

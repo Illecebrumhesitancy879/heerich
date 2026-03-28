@@ -50,24 +50,14 @@ if (window.matchMedia("(max-width: 56rem)").matches) {
   panel.removeAttribute("open");
 }
 const boxesSection = document.getElementById("boxes");
-new IntersectionObserver(
-  ([entry]) => {
-    panel.classList.toggle(
-      "visible",
-      entry.isIntersecting || entry.boundingClientRect.top < 0,
-    );
-  },
-  { rootMargin: "0px 0px -50% 0px" },
-).observe(boxesSection);
-
-// Also keep visible once scrolled past
+let panelShown = false;
 window.addEventListener(
   "scroll",
   () => {
+    if (panelShown) return;
     if (boxesSection.getBoundingClientRect().top < window.innerHeight) {
       panel.classList.add("visible");
-    } else {
-      panel.classList.remove("visible");
+      panelShown = true;
     }
   },
   { passive: true },
@@ -101,7 +91,39 @@ function getCamera() {
 const demos = [];
 
 // Hero header
-const hero = initHero(document.getElementById("hero"), getCamera);
+function getReservedZone() {
+  const heroRect = document.getElementById("hero").getBoundingClientRect();
+  const h1 = document.querySelector("article h1");
+  if (!h1) return null;
+  
+  const h1Rect = h1.getBoundingClientRect();
+  
+  // Add padding around the title for breathing room
+  const padding = 20;
+  
+  // Convert to coordinates relative to hero container
+  return {
+    x: Math.max(0, h1Rect.left - heroRect.left - padding),
+    y: Math.max(0, h1Rect.top - heroRect.top - padding),
+    width: h1Rect.width + padding * 2,
+    height: h1Rect.height + padding * 2,
+  };
+}
+
+const hero = initHero(
+  document.getElementById("hero"), 
+  getCamera,
+  getReservedZone
+);
+
+// Repaint hero on resize to recalculate reserved zone
+let resizeTimeout;
+window.addEventListener("resize", () => {
+  clearTimeout(resizeTimeout);
+  resizeTimeout = setTimeout(() => {
+    hero.repaint();
+  }, 150);
+}, { passive: true });
 
 function rerenderAll() {
   demos.forEach((fn) => fn());
