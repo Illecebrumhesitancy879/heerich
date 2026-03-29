@@ -534,17 +534,13 @@ button:hover {
   display: none;
 }
 
-.details-icon-open,
 .details-icon-closed {
-  display: none;
+  display: inline-block;
+  transition: transform 0.3s;
 }
 
-.camera-panel[open] .details-icon-open {
-  display: inline;
-}
-
-.camera-panel:not([open]) .details-icon-closed {
-  display: inline;
+.camera-panel[open] .details-icon-closed {
+  transform: rotate(90deg);
 }
 
 .camera-panel .camera-section-title {
