@@ -696,6 +696,7 @@ button:hover {
 .camera-panel .range-wrap {
   flex: 1;
   min-width: 7rem;
+  transform: translateY(-1ex);
 }
 
 input[type="color"] {
