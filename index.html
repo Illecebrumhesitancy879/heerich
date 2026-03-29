@@ -965,25 +965,18 @@ function frame(now) {
 
       <!-- ─── 11. Kitchen sink ──────────────────────────── -->
 
-      <div class="section-row" id="combined">
-        <div class="section-demo">
-          <div class="demo" id="demo-combined">
-            <div class="demo-canvas"></div>
-            <div class="demo-controls">
-              <label><button data-bind="play">Play</button></label>
-              <label><button data-bind="reset">Reset</button></label>
-            </div>
-          </div>
-        </div>
-        <div class="section-text">
-          <h2>Putting it all together</h2>
-          <p>
-            A scene combining everything: boxes, spheres, lines, functional
-            styles, carving, and animated deconstruction. Hit play to watch
-            holes carve into the structure with staggered easing, then reset to
-            rebuild.
-          </p>
-        </div>
+      <div class="section-full" id="combined">
+        <h2>Putting it all together</h2>
+        <p>
+          A procedurally generated composition combining boxes, boolean
+          carving, functional styles, and animated deconstruction. Holes
+          carve into a full-width grid with depth-graded walls, while
+          towers rise from within. Click the scene to regenerate.
+        </p>
+      </div>
+
+      <div class="combined-canvas" id="demo-combined">
+        <div class="demo-canvas"></div>
       </div>
 
       <!-- ─── 12. Heerich Gallery ───────────────────────── -->

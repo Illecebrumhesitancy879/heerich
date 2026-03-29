@@ -741,23 +741,63 @@ function animateHoles({
   demos.push(drawStatic);
 }
 
-// ─── 11. Combined ────────────────────
+// ─── 11. Combined — full-width hero-like scene ─────
 {
   const root = document.getElementById("demo-combined");
   const canvas = root.querySelector(".demo-canvas");
-  const btnPlay = root.querySelector('[data-bind="play"]');
-  const btnReset = root.querySelector('[data-bind="reset"]');
+  let animId = 0;
+  let scene = null;
 
-  const holes = [
-    { x: 1, y: 1, w: 3, h: 3, targetDepth: 5 },
-    { x: 6, y: 0, w: 3, h: 4, targetDepth: 6 },
-    { x: 2, y: 5, w: 5, h: 3, targetDepth: 4 },
-    { x: 0, y: 3, w: 2, h: 4, targetDepth: 3 },
-  ];
+  function rand(min, max) {
+    return min + Math.floor(Math.random() * (max - min + 1));
+  }
 
-  function buildScene(depths) {
+  function randomizeScene() {
+    const availW = root.clientWidth;
+    const availH = root.clientHeight;
+    const gridSize = Math.round(availW * (rand(4, 7) / 100));
+    const cols = Math.ceil(availW / gridSize);
+    const rows = Math.ceil(availH * 0.6 / gridSize);
+
+    const numHoles = rand(2, 4);
+    const holes = [];
+    for (let i = 0; i < numHoles; i++) {
+      const w = Math.max(2, Math.floor(cols * (0.1 + Math.random() * 0.4)));
+      const h = Math.max(2, Math.floor(rows * (0.1 + Math.random() * 0.4)));
+      const x = Math.floor(Math.random() * Math.max(1, cols - w));
+      const y = Math.floor(Math.random() * Math.max(1, rows - h));
+      const targetDepth = rand(5, 14);
+      holes.push({ x, y, w, h, targetDepth });
+    }
+
+    // Towers inside holes
+    const towers = [];
+    holes.forEach((h, holeIndex) => {
+      const numTowers = rand(1, 3);
+      for (let t = 0; t < numTowers; t++) {
+        const tw = Math.max(1, rand(1, Math.floor(h.w * 0.3)));
+        const th = Math.max(1, rand(1, Math.floor(h.h * 0.3)));
+        const tx = h.x + rand(1, Math.max(1, h.w - tw - 1));
+        const ty = h.y + rand(1, Math.max(1, h.h - th - 1));
+        const targetHeight = rand(Math.floor(h.targetDepth * 0.3), h.targetDepth);
+        towers.push({ x: tx, y: ty, w: tw, h: th, holeIndex, targetHeight });
+      }
+    });
+
+    // Random color for walls
+    const color = [Math.random(), Math.random(), Math.random()];
+    const m = Math.max(...color);
+    if (m > 0) color.forEach((_, i) => (color[i] /= m));
+
+    scene = { gridSize, cols, rows, holes, towers, color };
+  }
+
+  function buildScene(depths, towerHeights) {
+    const { gridSize, cols, rows, holes, towers, color } = scene;
+    const maxDepth = Math.max(...depths.map((d) => Math.round(d)), 1);
+
     const e = new Heerich({
-      tile: [22, 22],
+      tile: [gridSize, gridSize],
       camera: getCamera(),
       style: {
         fill: "var(--fill)",
@@ -766,91 +806,146 @@ function animateHoles({
       },
     });
 
-    e.addBox({ position: [0, 0, 0], size: [12, 10, 7] });
+    e.addBox({ position: [0, 0, 0], size: [cols, rows, maxDepth] });
 
+    // Carve holes
     holes.forEach((h, i) => {
       const d = Math.round(depths[i]);
       if (d > 0) e.removeBox({ position: [h.x, h.y, 0], size: [h.w, h.h, d] });
     });
 
-    e.addSphere({
-      center: [14.5, 5, 3.5],
-      radius: 3.5,
-      style: {
-        default: (x, y, z) => {
-          const ny = (y - 1.5) / 7;
-          const L = 0.55 + ny * 0.35;
-          return {
-            fill: `oklch(${L} 0.12 250)`,
-            stroke: `oklch(${L - 0.15} 0.12 250)`,
-            strokeWidth: "var(--stroke-w)",
-          };
-        },
-      },
+    // Color inside walls — gradient: full color near surface, fading to dark at depth
+    // Style the voxels surrounding the hole (1 unit outside the carved area)
+    holes.forEach((h, i) => {
+      const d = Math.round(depths[i]);
+      if (d <= 0) return;
+      // Lerp from surface color (bg) to outline color (text) at depth
+      const isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      const bg = isDark ? [14, 14, 14] : [251, 244, 234];
+      const target = isDark ? [251, 244, 234] : [14, 14, 14];
+      const wallStyle = (x, y, z) => {
+        const t = z / Math.max(d, 1); // 0 at surface, 1 at depth
+        const r = Math.round(bg[0] + (target[0] - bg[0]) * t);
+        const g = Math.round(bg[1] + (target[1] - bg[1]) * t);
+        const b = Math.round(bg[2] + (target[2] - bg[2]) * t);
+        return {
+          fill: `rgb(${r},${g},${b})`,
+          stroke: "var(--stroke-c)",
+        };
+      };
+      const endColor = `rgb(${target[0]},${target[1]},${target[2]})`;
+      const endStroke = "var(--stroke-c)";
+      // Style the 4 walls surrounding the hole (not the surface voxels)
+      // Left wall
+      e.styleBox({ position: [h.x - 1, h.y, 0], size: [1, h.h, d], style: { right: wallStyle } });
+      // Right wall
+      e.styleBox({ position: [h.x + h.w, h.y, 0], size: [1, h.h, d], style: { left: wallStyle } });
+      // Top wall
+      e.styleBox({ position: [h.x, h.y - 1, 0], size: [h.w, 1, d], style: { bottom: wallStyle } });
+      // Bottom wall
+      e.styleBox({ position: [h.x, h.y + h.h, 0], size: [h.w, 1, d], style: { top: wallStyle } });
+      // Floor (back face at depth)
+      e.styleBox({ position: [h.x, h.y, d], size: [h.w, h.h, 1], style: { front: { fill: endColor, stroke: endStroke } } });
     });
 
-    e.addLine({
-      from: [12, 8, 0],
-      to: [12, 8, 10],
-      radius: 0.8,
-      shape: "rounded",
-      style: {
-        default: { fill: "var(--fill)", stroke: "var(--stroke-c)" },
-      },
-    });
-
-    e.addBox({
-      position: [13, 0, 0],
-      size: [3, 3, 4],
-      style: {
-        default: (x, y, z) => {
-          const H = 20 + ((x - 13) / 3) * 40;
-          const L = 0.6 + (z / 4) * 0.25;
-          return {
-            fill: `oklch(${L} 0.18 ${H})`,
-            stroke: `oklch(${L - 0.15} 0.18 ${H})`,
-            strokeWidth: "var(--stroke-w)",
-          };
-        },
-      },
-    });
-
-    if (depths[0] > 1) {
-      e.styleBox({
-        position: [1, 1, 0],
-        size: [3, 3, Math.min(Math.round(depths[0]), 5)],
-        style: {
-          front: { fill: "#c8b0ff" },
-          left: { fill: "#b098e8" },
-          right: { fill: "#b098e8" },
-        },
+    // Add towers — walls use the same gradient as the hole they sit in
+    const isDarkTower = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const tBg = isDarkTower ? [14, 14, 14] : [251, 244, 234];
+    const tTarget = isDarkTower ? [251, 244, 234] : [14, 14, 14];
+    if (towerHeights) {
+      towers.forEach((tower, idx) => {
+        const th = Math.round(towerHeights[idx]);
+        if (th <= 0) return;
+        const holeDepth = Math.round(depths[tower.holeIndex]);
+        const clamped = Math.min(th, holeDepth);
+        const towerWallStyle = (x, y, z) => {
+          const t = z / Math.max(holeDepth, 1);
+          const r = Math.round(tBg[0] + (tTarget[0] - tBg[0]) * t);
+          const g = Math.round(tBg[1] + (tTarget[1] - tBg[1]) * t);
+          const b = Math.round(tBg[2] + (tTarget[2] - tBg[2]) * t);
+          return { fill: `rgb(${r},${g},${b})`, stroke: "var(--stroke-c)" };
+        };
+        // Front face color = gradient value at the tower's top z position
+        const topZ = holeDepth - clamped;
+        const ft = topZ / Math.max(holeDepth, 1);
+        const fr = Math.round(tBg[0] + (tTarget[0] - tBg[0]) * ft);
+        const fg = Math.round(tBg[1] + (tTarget[1] - tBg[1]) * ft);
+        const fb = Math.round(tBg[2] + (tTarget[2] - tBg[2]) * ft);
+        e.addBox({
+          position: [tower.x, tower.y, topZ],
+          size: [tower.w, tower.h, clamped],
+          style: {
+            left: towerWallStyle,
+            right: towerWallStyle,
+            top: towerWallStyle,
+            bottom: towerWallStyle,
+            front: { fill: `rgb(${fr},${fg},${fb})`, stroke: "var(--stroke-c)" },
+          },
+        });
       });
     }
 
-    return e.toSVG(svgOpts);
-  }
-
-  function drawStatic() {
-    canvas.innerHTML = buildScene(holes.map(() => 0));
-  }
-
-  btnPlay.addEventListener("click", () => {
-    animateHoles({
-      canvas,
-      holes,
-      buildScene,
-      duration: 1000,
-      stagger: 180,
+    return e.toSVG({
+      padding: 30,
+      faceAttributes: () => ({ "vector-effect": "non-scaling-stroke" }),
     });
-  });
+  }
 
-  btnReset.addEventListener("click", () => {
-    canvas._animId = (canvas._animId || 0) + 1;
-    drawStatic();
-  });
+  function animateIn() {
+    const id = ++animId;
+    const holeTargets = scene.holes.map((h) => h.targetDepth);
+    const towerTargets = scene.towers.map((t) => t.targetHeight);
+    const holeDur = 800, holeStagger = 200;
+    const towerDur = 600, towerStagger = 80;
+    const startTime = performance.now();
+    const holeEndTime = holeDur + (scene.holes.length - 1) * holeStagger;
+    const towerStartDelay = holeEndTime + 200;
 
-  drawStatic();
-  demos.push(drawStatic);
+    function ease(t) {
+      return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    }
+
+    function step(now) {
+      if (id !== animId) return;
+      let allDone = true;
+
+      const depths = holeTargets.map((target, i) => {
+        const elapsed = now - startTime - i * holeStagger;
+        if (elapsed <= 0) { allDone = false; return 0; }
+        if (elapsed >= holeDur) return target;
+        allDone = false;
+        return target * ease(elapsed / holeDur);
+      });
+
+      const towerHeights = towerTargets.map((target, i) => {
+        const elapsed = now - startTime - towerStartDelay - i * towerStagger;
+        if (elapsed <= 0) { allDone = false; return 0; }
+        if (elapsed >= towerDur) return target;
+        allDone = false;
+        return target * ease(elapsed / towerDur);
+      });
+
+      canvas.innerHTML = buildScene(depths, towerHeights);
+      if (!allDone) requestAnimationFrame(step);
+    }
+
+    requestAnimationFrame(step);
+  }
+
+  function init() {
+    randomizeScene();
+    animateIn();
+  }
+
+  root.addEventListener("click", init);
+  init();
+  demos.push(() => {
+    randomizeScene();
+    canvas.innerHTML = buildScene(
+      scene.holes.map((h) => h.targetDepth),
+      scene.towers.map((t) => t.targetHeight),
+    );
+  });
 }
 
 // ─── 12. Heerich Gallery ─────────────
