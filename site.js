@@ -90,7 +90,10 @@ function roundToStep(value, min, step) {
   return Number(rounded.toFixed(4));
 }
 
-const num = (v, fallback) => { const n = parseFloat(v); return Number.isNaN(n) ? fallback : n; };
+const num = (v, fallback) => {
+  const n = parseFloat(v);
+  return Number.isNaN(n) ? fallback : n;
+};
 
 function updatePerspectiveGrid() {
   const angleMin = num(camAngle.min, 0);

@@ -133,8 +133,12 @@ export class Heerich {
    * `get` extracts [x,y,z] from each item.
    */
   static _bboxCenter(items, get) {
-    let minX = Infinity, minY = Infinity, minZ = Infinity;
-    let maxX = -Infinity, maxY = -Infinity, maxZ = -Infinity;
+    let minX = Infinity,
+      minY = Infinity,
+      minZ = Infinity;
+    let maxX = -Infinity,
+      maxY = -Infinity,
+      maxZ = -Infinity;
     for (const item of items) {
       const [x, y, z] = get(item);
       if (x < minX) minX = x;
@@ -199,7 +203,8 @@ export class Heerich {
    */
   rotate(opts) {
     const entries = [...this.voxels.values()];
-    const [cx, cy, cz] = opts.center || Heerich._bboxCenter(entries, (v) => [v.x, v.y, v.z]);
+    const [cx, cy, cz] =
+      opts.center || Heerich._bboxCenter(entries, (v) => [v.x, v.y, v.z]);
 
     this.voxels.clear();
     for (const v of entries) {
@@ -267,7 +272,9 @@ export class Heerich {
           if (this.voxels.delete(key) && style) {
             // Style the newly exposed faces of neighboring voxels
             for (const [dx, dy, dz, face] of ADJ) {
-              const nx = x + dx, ny = y + dy, nz = z + dz;
+              const nx = x + dx,
+                ny = y + dy,
+                nz = z + dz;
               const nk = this._k(nx, ny, nz);
               const neighbor = this.voxels.get(nk);
               if (neighbor) {
@@ -518,7 +525,11 @@ export class Heerich {
    * @param {[number,number,number]} opts.size
    */
   removeBox(opts) {
-    this._applyOp(this._boxCoords(opts.position, opts.size), "subtract", opts.style);
+    this._applyOp(
+      this._boxCoords(opts.position, opts.size),
+      "subtract",
+      opts.style,
+    );
   }
 
   /**
@@ -555,7 +566,11 @@ export class Heerich {
    * @param {number} opts.radius
    */
   removeSphere(opts) {
-    this._applyOp(this._sphereCoords(opts.center, opts.radius), "subtract", opts.style);
+    this._applyOp(
+      this._sphereCoords(opts.center, opts.radius),
+      "subtract",
+      opts.style,
+    );
   }
 
   /**
@@ -693,7 +708,11 @@ export class Heerich {
    * @param {function(number,number,number): boolean} opts.test
    */
   removeWhere(opts) {
-    this._applyOp(this._whereCoords(opts.bounds, opts.test), "subtract", opts.style);
+    this._applyOp(
+      this._whereCoords(opts.bounds, opts.test),
+      "subtract",
+      opts.style,
+    );
   }
 
   /**
@@ -744,7 +763,10 @@ export class Heerich {
   styleLine(opts) {
     const radius = opts.radius || 0;
     const shape = opts.shape || "rounded";
-    this._styleCoords(this._lineCoords(opts.from, opts.to, radius, shape), opts.style);
+    this._styleCoords(
+      this._lineCoords(opts.from, opts.to, radius, shape),
+      opts.style,
+    );
   }
 
   /**
