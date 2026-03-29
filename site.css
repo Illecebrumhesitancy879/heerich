@@ -534,12 +534,17 @@ button:hover {
   display: none;
 }
 
-.camera-panel summary.camera-title::after {
-  content: " −";
+.details-icon-open,
+.details-icon-closed {
+  display: none;
 }
 
-.camera-panel:not([open]) summary.camera-title::after {
-  content: " +";
+.camera-panel[open] .details-icon-open {
+  display: inline;
+}
+
+.camera-panel:not([open]) .details-icon-closed {
+  display: inline;
 }
 
 .camera-panel .camera-section-title {
