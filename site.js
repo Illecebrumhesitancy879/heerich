@@ -255,12 +255,19 @@ document.getElementById("btn-randomize-camera").addEventListener("click", () => 
 });
 
 document.getElementById("btn-randomize-style").addEventListener("click", () => {
-  const randHex = () => "#" + Math.floor(Math.random() * 0xffffff).toString(16).padStart(6, "0");
-  camFill.value = randHex();
-  camStrokeColor.value = randHex();
+  const h = Math.round(Math.random() * 360);
+  const s = 20 + Math.round(Math.random() * 60);
+  const l = 60 + Math.round(Math.random() * 30);
+  // Convert HSL to hex
+  const hslToHex = (h, s, l) => {
+    const el = document.createElement("canvas").getContext("2d");
+    el.fillStyle = `hsl(${h},${s}%,${l}%)`;
+    return el.fillStyle;
+  };
+  camFill.value = hslToHex(h, s, l);
+  camStrokeColor.value = hslToHex((h + 180) % 360, s, 100 - l);
   camStroke.value = (Math.random() * 2.5).toFixed(1);
-  const span = camStroke.parentElement.querySelector(".value");
-  if (span) span.textContent = camStroke.value;
+  camStroke.dispatchEvent(new Event("input", { bubbles: true }));
   syncStyleVars();
   rerenderAll();
 });
