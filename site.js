@@ -780,9 +780,19 @@ function animateHoles({
         const tx = h.x + rand(1, Math.max(1, h.w - tw - 1));
         const ty = h.y + rand(1, Math.max(1, h.h - th - 1));
         const targetHeight = rand(Math.floor(h.targetDepth * 0.3), h.targetDepth);
-        towers.push({ x: tx, y: ty, w: tw, h: th, holeIndex, targetHeight });
+        towers.push({ x: tx, y: ty, w: tw, h: th, holeIndex, targetHeight, overflow: false });
       }
     });
+
+    // Pick 1-2 random towers across all holes to overflow by 1
+    const overflowCount = Math.min(towers.length, rand(1, 2));
+    const shuffled = [...towers].sort(() => Math.random() - 0.5);
+    for (let i = 0; i < overflowCount; i++) {
+      const t = shuffled[i];
+      const hole = holes[t.holeIndex];
+      t.targetHeight = hole.targetDepth + 1;
+      t.overflow = true;
+    }
 
     // Random color for walls
     const color = [Math.random(), Math.random(), Math.random()];
@@ -845,11 +855,14 @@ function animateHoles({
         const th = Math.round(towerHeights[idx]);
         if (th <= 0) return;
         const holeDepth = Math.round(depths[tower.holeIndex]);
-        const clamped = Math.min(th, holeDepth);
-        const topZ = holeDepth - clamped;
+        const topZ = Math.max(0, holeDepth - th);
+        const height = holeDepth - topZ;
+        // Overflow towers poke above the surface (negative z)
+        const startZ = tower.overflow ? -Math.max(0, th - holeDepth) : topZ;
+        const totalH = tower.overflow ? th : height;
         e.addBox({
-          position: [tower.x, tower.y, topZ],
-          size: [tower.w, tower.h, clamped],
+          position: [tower.x, tower.y, startZ],
+          size: [tower.w, tower.h, totalH],
           style: {
             default: wallFill,
           },
