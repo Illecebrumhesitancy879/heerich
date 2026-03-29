@@ -240,6 +240,31 @@ camGrid.addEventListener("pointerdown", (event) => {
   document.addEventListener("pointerup", onPointerUp);
 });
 
+document.getElementById("btn-randomize-camera").addEventListener("click", () => {
+  camProj.value = Math.random() > 0.5 ? "perspective" : "oblique";
+  camAngle.value = Math.round(Math.random() * 360);
+  camDist.value = (2 + Math.random() * 18).toFixed(1);
+  camY.value = (1 + Math.random() * 9).toFixed(1);
+  [camAngle, camDist, camY].forEach((el) => {
+    const span = el.parentElement.querySelector(".value");
+    if (span) span.textContent = el.value;
+  });
+  syncCameraControlVisibility();
+  updatePerspectiveGrid();
+  rerenderAll();
+});
+
+document.getElementById("btn-randomize-style").addEventListener("click", () => {
+  const randHex = () => "#" + Math.floor(Math.random() * 0xffffff).toString(16).padStart(6, "0");
+  camFill.value = randHex();
+  camStrokeColor.value = randHex();
+  camStroke.value = (Math.random() * 2.5).toFixed(1);
+  const span = camStroke.parentElement.querySelector(".value");
+  if (span) span.textContent = camStroke.value;
+  syncStyleVars();
+  rerenderAll();
+});
+
 // ─── Helper: wire up a demo's controls and render loop ───
 const baseStyle = {
   fill: "var(--fill)",
