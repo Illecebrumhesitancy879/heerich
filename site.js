@@ -528,6 +528,7 @@ setupDemo("demo-line", (v) => {
 });
 
 // ─── 7. Functional ───────────────────
+const hueStart = Math.random() * 360;
 setupDemo("demo-functional", (v) => {
   const s = v.s;
   const hueRange = v.hue;
@@ -546,12 +547,10 @@ setupDemo("demo-functional", (v) => {
     style: {
       default: (x, y, z) => {
         const L = 0.4 + (y / s) * 0.5;
-        const C = 0.05 + (z / s) * 0.2;
-        const H = (x / s) * hueRange;
+        const C = 0.05 + (1 - z / s) * 0.2;
+        const H = ((x / s) * hueRange + hueStart) % 360;
         return {
           fill: `oklch(${L} ${C} ${H})`,
-          stroke: `oklch(${L - 0.12} ${C} ${H})`,
-          strokeWidth: "var(--stroke-w)",
         };
       },
     },
