@@ -789,11 +789,24 @@ function animateHoles({
     const m = Math.max(...color);
     if (m > 0) color.forEach((_, i) => (color[i] /= m));
 
-    scene = { gridSize, cols, rows, holes, towers, color };
+    // Carve-out spheres — positioned at edges/corners of holes, growing outward
+    const carves = [];
+    holes.forEach((h) => {
+      const numCarves = rand(1, 3);
+      for (let c = 0; c < numCarves; c++) {
+        const cx = h.x + rand(0, h.w - 1) + 0.5;
+        const cy = h.y + rand(0, h.h - 1) + 0.5;
+        const cz = rand(1, Math.floor(h.targetDepth * 0.7)) + 0.5;
+        const targetR = rand(2, Math.max(2, Math.floor(Math.min(h.w, h.h) * 0.6)));
+        carves.push({ cx, cy, cz, targetR });
+      }
+    });
+
+    scene = { gridSize, cols, rows, holes, towers, color, carves };
   }
 
-  function buildScene(depths, towerHeights) {
-    const { gridSize, cols, rows, holes, towers, color } = scene;
+  function buildScene(depths, towerHeights, carveRadii) {
+    const { gridSize, cols, rows, holes, towers, color, carves } = scene;
     const maxDepth = Math.max(...depths.map((d) => Math.round(d)), 1);
 
     const e = new Heerich({
@@ -885,6 +898,16 @@ function animateHoles({
       });
     }
 
+    // Carve-out spheres — boolean subtract from inside out
+    if (carveRadii && carves) {
+      carves.forEach((c, i) => {
+        const r = carveRadii[i];
+        if (r > 0.3) {
+          e.removeSphere({ center: [c.cx, c.cy, c.cz], radius: r });
+        }
+      });
+    }
+
     return e.toSVG({
       padding: 30,
       faceAttributes: () => ({ "vector-effect": "non-scaling-stroke" }),
@@ -895,11 +918,15 @@ function animateHoles({
     const id = ++animId;
     const holeTargets = scene.holes.map((h) => h.targetDepth);
     const towerTargets = scene.towers.map((t) => t.targetHeight);
+    const carveTargets = scene.carves.map((c) => c.targetR);
     const holeDur = 800, holeStagger = 200;
     const towerDur = 600, towerStagger = 80;
+    const carveDur = 1000, carveStagger = 150;
     const startTime = performance.now();
     const holeEndTime = holeDur + (scene.holes.length - 1) * holeStagger;
     const towerStartDelay = holeEndTime + 200;
+    const towerEndTime = towerStartDelay + towerDur + (scene.towers.length - 1) * towerStagger;
+    const carveStartDelay = towerEndTime + 300;
 
     function ease(t) {
       return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
@@ -925,7 +952,15 @@ function animateHoles({
         return target * ease(elapsed / towerDur);
       });
 
-      canvas.innerHTML = buildScene(depths, towerHeights);
+      const carveRadii = carveTargets.map((target, i) => {
+        const elapsed = now - startTime - carveStartDelay - i * carveStagger;
+        if (elapsed <= 0) { allDone = false; return 0; }
+        if (elapsed >= carveDur) return target;
+        allDone = false;
+        return target * ease(elapsed / carveDur);
+      });
+
+      canvas.innerHTML = buildScene(depths, towerHeights, carveRadii);
       if (!allDone) requestAnimationFrame(step);
     }
 
@@ -944,6 +979,7 @@ function animateHoles({
     canvas.innerHTML = buildScene(
       scene.holes.map((h) => h.targetDepth),
       scene.towers.map((t) => t.targetHeight),
+      scene.carves.map((c) => c.targetR),
     );
   });
 }
