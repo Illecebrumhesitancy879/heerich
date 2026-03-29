@@ -481,12 +481,13 @@ nav a:hover {
 button {
   font-family: "Aboreto", cursive;
   font-size: 0.85rem;
-  padding: 0.4em 1em;
+  padding: .75em 1.5em;
   background: var(--bg);
   color: var(--text);
   border: 1px solid var(--line);
-  border-radius: 3px;
+  border-radius: 0;
   cursor: pointer;
+  transform: translateY(-20%);
 }
 
 button:hover {
@@ -715,6 +716,20 @@ input[type="color"]::-webkit-color-swatch {
   color: color-mix(in oklab, var(--text) 60%, var(--bg) 40%);
   margin-top: -0.3em;
   margin-bottom: 1.2em;
+}
+
+.combined-canvas {
+  width: 100%;
+  min-height: 50vh;
+  cursor: pointer;
+  margin-top: 2rem;
+  margin-bottom: 8rem;
+}
+
+.combined-canvas svg {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
 .gallery {
