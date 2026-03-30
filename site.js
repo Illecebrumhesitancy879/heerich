@@ -281,6 +281,7 @@ document.getElementById("btn-randomize-style").addEventListener("click", () => {
     return el.fillStyle;
   };
   camFill.value = hslToHex(h, s, l);
+  camFill.dataset.transparent = "";
   camStrokeColor.value = hslToHex((h + 180) % 360, s, 100 - l);
   camOutlineColor.value = camStrokeColor.value;
   camStroke.value = (Math.random() * 2.5).toFixed(1);
@@ -318,7 +319,10 @@ function syncStyleVars() {
     "--stroke-c",
     camStrokeColor.value,
   );
-  document.documentElement.style.setProperty("--fill", camFill.value);
+  document.documentElement.style.setProperty(
+    "--fill",
+    camFill.dataset.transparent === "1" ? "transparent" : camFill.value,
+  );
   hero.repaint();
 }
 camStroke.addEventListener("input", () => {
@@ -327,7 +331,14 @@ camStroke.addEventListener("input", () => {
   syncStyleVars();
 });
 camStrokeColor.addEventListener("input", () => syncStyleVars());
-camFill.addEventListener("input", () => syncStyleVars());
+camFill.addEventListener("input", () => {
+  camFill.dataset.transparent = "";
+  syncStyleVars();
+});
+document.getElementById("cam-fill-clear").addEventListener("click", () => {
+  camFill.dataset.transparent = "1";
+  syncStyleVars();
+});
 camOutline.addEventListener("input", () => {
   const span = camOutline.parentElement.querySelector(".control-value");
   if (span) span.textContent = camOutline.value;
