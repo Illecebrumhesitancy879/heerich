@@ -495,18 +495,18 @@ setupDemo("demo-scale", (v) => {
 
   for (let i = 0; i < total; i++) {
     const [px, pz] = path[i];
-    // Bottom staircase — anchored to floor
+    // Standing on floor
     e.addBox({
-      position: [px, 2, pz],
+      position: [px, 1, pz],
       size: [1, 1, 1],
       scale: [1, ((i + 1) / total) * h, 1],
       scaleOrigin: [0.5, 1, 0.5],
     });
-    // Top staircase — anchored to ceiling (flipped origin + reversed height)
+    // Hanging from ceiling, below the floor stairs (reversed height)
     e.addBox({
-      position: [px, 0, pz],
+      position: [px, 2, pz],
       size: [1, 1, 1],
-      scale: [1, ((i + 1) / total) * h, 1],
+      scale: [1, ((total - i) / total) * h, 1],
       scaleOrigin: [0.5, 0, 0.5],
     });
   }
