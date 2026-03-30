@@ -486,10 +486,18 @@ setupDemo("demo-scale", (v) => {
   // Spiral staircase around a 2x2 hole
   // Hole at (1,1)-(2,2), path goes clockwise
   const path = [
-    [0, 0], [1, 0], [2, 0], [3, 0],
-    [3, 1], [3, 2], [3, 3],
-    [2, 3], [1, 3], [0, 3],
-    [0, 2], [0, 1],
+    [0, 0],
+    [1, 0],
+    [2, 0],
+    [3, 0],
+    [3, 1],
+    [3, 2],
+    [3, 3],
+    [2, 3],
+    [1, 3],
+    [0, 3],
+    [0, 2],
+    [0, 1],
   ];
   const total = path.length;
 

@@ -269,7 +269,9 @@ export class Heerich {
             const s = typeof scale === "function" ? scale(x, y, z) : scale;
             if (s) {
               voxel.scale = s;
-              voxel.scaleOrigin = (typeof scaleOrigin === "function" ? scaleOrigin(x, y, z) : scaleOrigin) || [0.5, 0, 0.5];
+              voxel.scaleOrigin = (typeof scaleOrigin === "function"
+                ? scaleOrigin(x, y, z)
+                : scaleOrigin) || [0.5, 0, 0.5];
               voxel.opaque = false;
             }
           } else if (opaque === false) {
@@ -317,7 +319,9 @@ export class Heerich {
               const s = typeof scale === "function" ? scale(x, y, z) : scale;
               if (s) {
                 voxel.scale = s;
-                voxel.scaleOrigin = (typeof scaleOrigin === "function" ? scaleOrigin(x, y, z) : scaleOrigin) || [0.5, 0, 0.5];
+                voxel.scaleOrigin = (typeof scaleOrigin === "function"
+                  ? scaleOrigin(x, y, z)
+                  : scaleOrigin) || [0.5, 0, 0.5];
                 voxel.opaque = false;
               }
             } else if (opaque === false) {
