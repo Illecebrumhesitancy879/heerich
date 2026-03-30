@@ -254,6 +254,10 @@ ul {
 
 a {
   color: var(--text);
+
+  &:hover {
+    text-decoration: none;
+  }
 }
 
 .demo {
@@ -429,20 +433,34 @@ pre {
 
 code {
   font-family: "SF Mono", "Fira Code", "Fira Mono", Menlo, monospace;
-  font-size: 0.8em;
+  font-size: 1em;
 }
 
-/* Override speed-highlight defaults */
-[class*="shj-lang-"] {
-  font-size: inherit !important;
-  line-height: inherit !important;
-  font-family: "SF Mono", "Fira Code", "Fira Mono", Menlo, monospace !important;
-  background: transparent !important;
-  padding: 0 !important;
-  margin: 0 !important;
-  border: none !important;
-  border-radius: 0 !important;
-  box-shadow: none !important;
+/* Sugar-high syntax highlighting tokens */
+:root {
+  --sh-class: #8d85ff;
+  --sh-identifier: #354150;
+  --sh-keyword: #f47067;
+  --sh-string: #00a99a;
+  --sh-property: #4e8fdf;
+  --sh-entity: #6eafad;
+  --sh-comment: #a19595;
+  --sh-jsxliterals: #bf7db6;
+  --sh-sign: #8996a3;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --sh-class: #b4a6ff;
+    --sh-identifier: #c8d4de;
+    --sh-keyword: #ff8a7a;
+    --sh-string: #3cc;
+    --sh-property: #7ab4f5;
+    --sh-entity: #8fc8c6;
+    --sh-comment: #6b6060;
+    --sh-jsxliterals: #d9a0d4;
+    --sh-sign: #a3b0bd;
+  }
 }
 
 p code {
@@ -811,4 +829,8 @@ input[type="color"]::-webkit-color-swatch {
   margin-top: 2rem;
   font-size: 0.8rem;
   color: color-mix(in oklab, var(--text) 50%, var(--bg));
+}
+
+.credit + .credit {
+  margin-top: 0.5rem;
 }

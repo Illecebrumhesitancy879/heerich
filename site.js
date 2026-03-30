@@ -1,8 +1,10 @@
 import { Heerich } from "./src/heerich.js";
 import { version } from "./package.json";
 import { initHero } from "./hero.js";
-import { highlightAll } from "https://unpkg.com/@speed-highlight/core/dist/index.js";
-highlightAll();
+import { highlight } from "https://esm.sh/sugar-high";
+document.querySelectorAll("pre code").forEach((el) => {
+  el.innerHTML = highlight(el.textContent);
+});
 
 document.querySelector("h1 .version").textContent = version;
 

@@ -41,16 +41,6 @@
       href="https://fonts.googleapis.com/css2?family=Aboreto&family=Work+Sans:wght@300;400&display=swap"
       rel="stylesheet"
     />
-    <link
-      rel="stylesheet"
-      href="https://unpkg.com/@speed-highlight/core/dist/themes/github-light.css"
-      media="(prefers-color-scheme: light)"
-    />
-    <link
-      rel="stylesheet"
-      href="https://unpkg.com/@speed-highlight/core/dist/themes/github-dark.css"
-      media="(prefers-color-scheme: dark)"
-    />
     <link rel="stylesheet" href="./site.css" />
   </head>
   <body>
@@ -263,7 +253,7 @@
           style applied universally across the active sequence.
         </p>
 
-        <pre><code class="shj-lang-js">import { Heerich } from './src/heerich.js'
+        <pre><code >import { Heerich } from './src/heerich.js'
 
 const heerich = new Heerich({
   tile: [30, 30],           // pixel size per tile
@@ -284,7 +274,7 @@ const heerich = new Heerich({
           positioning needed, even when shapes extend into negative coordinates.
         </p>
 
-        <pre><code class="shj-lang-js">// Auto-centered with padding
+        <pre><code >// Auto-centered with padding
 document.body.innerHTML = heerich.toSVG({ padding: 30 })
 
 // Access raw bounds if you need them
@@ -323,7 +313,7 @@ const { x, y, w, h } = heerich.getViewBoxBounds()</code></pre>
             anchored by a corner position and dimensions. Every voxel inside it
             inherits the default style.
           </p>
-          <pre><code class="shj-lang-js">heerich.addBox({ position: [0, 0, 0], size: [6, 4, 3] })</code></pre>
+          <pre><code >heerich.addBox({ position: [0, 0, 0], size: [6, 4, 3] })</code></pre>
           <p>
             Drag the sliders below — the engine clears and rebuilds the scene on
             every frame. Because <code>getFaces()</code> utilizes a dirty-flag
@@ -359,7 +349,7 @@ const { x, y, w, h } = heerich.getViewBoxBounds()</code></pre>
             shape's bounds. To align objects of different dimensions on a shared
             surface, you handle the offsets manually.
           </p>
-          <pre><code class="shj-lang-js">const big = [6, 6, 6], small = [2, 2, 2]
+          <pre><code >const big = [6, 6, 6], small = [2, 2, 2]
 
 // Align max corners (tops flush)
 const max = big.map((b, i) => b - small[i])
@@ -406,7 +396,7 @@ const center = big.map((b, i) => (b - small[i]) / 2)</code></pre>
             <code>3.5</code>) tends to produce the cleanest symmetrical forms on
             integer grids.
           </p>
-          <pre><code class="shj-lang-js">heerich.addSphere({ center: [4.5, 4.5, 4.5], radius: 4.5 })</code></pre>
+          <pre><code >heerich.addSphere({ center: [4.5, 4.5, 4.5], radius: 4.5 })</code></pre>
           <p>
             Conversely, <code>removeSphere()</code> carves a hollow void using
             the exact same parameters. Layer a sphere subtraction into a solid
@@ -464,7 +454,7 @@ const center = big.map((b, i) => (b - small[i]) / 2)</code></pre>
             sequence of overlapping spheres) or
             <code>'square'</code> (overlapping cubes).
           </p>
-          <pre><code class="shj-lang-js">heerich.addLine({
+          <pre><code >heerich.addLine({
   from: [0, 0, 0], to: [8, 8, 8],
   radius: 1.5, shape: 'rounded'
 })</code></pre>
@@ -502,7 +492,7 @@ const center = big.map((b, i) => (b - small[i]) / 2)</code></pre>
             coordinates. Under the hood, boxes, spheres, and lines are merely
             convenient wrappers around this core method.
           </p>
-          <pre><code class="shj-lang-js">heerich.addWhere({
+          <pre><code >heerich.addWhere({
   bounds: [[0, 0, 0], [s, s, s]],
   test: (x, y, z) => {
     const c = Math.ceil(s / 4)
@@ -570,7 +560,7 @@ const center = big.map((b, i) => (b - small[i]) / 2)</code></pre>
             <li><strong>intersect</strong> — keep only the overlap</li>
             <li><strong>exclude</strong> — XOR, toggle each voxel</li>
           </ul>
-          <pre><code class="shj-lang-js">heerich.addBox({ position: [0, 0, 0], size: [6, 6, 6] })
+          <pre><code >heerich.addBox({ position: [0, 0, 0], size: [6, 6, 6] })
 
 // Carve a sphere out of the box
 heerich.addSphere({
@@ -629,7 +619,7 @@ heerich.addSphere({
             default, shapes pivot around their local center, but arbitrary
             custom origins are seamlessly supported.
           </p>
-          <pre><code class="shj-lang-js">// Build one arm, rotate a copy to make an L
+          <pre><code >// Build one arm, rotate a copy to make an L
 heerich.addBox({ position: [0, 0, 0], size: [2, 8, 2] })
 heerich.addBox({
   position: [0, 0, 0], size: [2, 8, 2],
@@ -678,7 +668,7 @@ heerich.rotate({ axis: 'y', turns: 2 })</code></pre>
             <code>stroke</code> the exact same color as the <code>fill</code>,
             effectively rendering the internal grid geometry invisible.
           </p>
-          <pre><code class="shj-lang-js">heerich.addBox({
+          <pre><code >heerich.addBox({
   position: [0, 0, 0], size: [4, 4, 4],
   style: { default: { fill: '#0e0e0e', stroke: '#0e0e0e' } }
 })</code></pre>
@@ -719,7 +709,7 @@ heerich.rotate({ axis: 'y', turns: 2 })</code></pre>
             styles during shape creation, or explicitly overwrite existing
             regions later using <code>styleBox()</code>.
           </p>
-          <pre><code class="shj-lang-js">heerich.addBox({
+          <pre><code >heerich.addBox({
   position: [0, 0, 0], size: [4, 4, 4],
   style: {
     default: { fill: '#eee', stroke: '#333' },
@@ -784,7 +774,7 @@ heerich.rotate({ axis: 'y', turns: 2 })</code></pre>
               >presentation attribute</a
             >.
           </p>
-          <pre><code class="shj-lang-js">heerich.addBox({
+          <pre><code >heerich.addBox({
   position: [0, 0, 0], size: [5, 5, 5],
   style: {
     default: {
@@ -842,7 +832,7 @@ heerich.rotate({ axis: 'y', turns: 2 })</code></pre>
             geometry-dependent shading rules — bypassing the need to iterate
             through individual voxels manually.
           </p>
-          <pre><code class="shj-lang-js">heerich.addBox({
+          <pre><code >heerich.addBox({
   position: [0, 0, 0], size: [8, 8, 8],
   style: {
     default: (x, y, z) => {
@@ -896,7 +886,7 @@ heerich.rotate({ axis: 'y', turns: 2 })</code></pre>
             triggers non-opaque rendering, correctly preserving visibility for
             occluded geometry layered behind it.
           </p>
-          <pre><code class="shj-lang-js">// Static — same scale for every voxel
+          <pre><code >// Static — same scale for every voxel
 heerich.addBox({
   position: [0, 0, 0],
   size: [1, 1, 1],
@@ -966,7 +956,7 @@ heerich.addBox({
             staggered architectural elements without stepping outside a single
             generative routine.
           </p>
-          <pre><code class="shj-lang-js">heerich.addBox({
+          <pre><code >heerich.addBox({
   position: [0, 0, 0], size: [s, s, s],
   scale: (x, y, z) => {
     const t = 1 - y / s
@@ -997,7 +987,7 @@ heerich.addBox({
           math anchored by an abstract camera position.
         </p>
 
-        <pre><code class="shj-lang-js">// Oblique (parallel)
+        <pre><code >// Oblique (parallel)
 heerich.setCamera({ type: 'oblique', angle: 315, distance: 25 })
 
 // Perspective (1-point)
@@ -1034,7 +1024,7 @@ heerich.setCamera({ type: 'perspective', position: [5, 5], distance: 12 })</code
             faces, enforces a strict Z-level depth sort, and encases everything
             cleanly inside an integrated <code>&lt;g&gt;</code> element.
           </p>
-          <pre><code class="shj-lang-js">heerich.addBox({
+          <pre><code >heerich.addBox({
   position: [3, 0, 6], size: [1, 1, 1],
   opaque: false,
   content: `&lt;text
@@ -1083,7 +1073,7 @@ heerich.setCamera({ type: 'perspective', position: [5, 5], distance: 12 })</code
             wireframe cages, bounding volumes, or see-through sculptural guides
             anchored cleanly over solid geometry.
           </p>
-          <pre><code class="shj-lang-js">// Wireframe cage over a solid core
+          <pre><code >// Wireframe cage over a solid core
 heerich.addBox({ position: [1, 1, 1], size: [3, 3, 3] })
 heerich.addBox({
   position: [0, 0, 0], size: [5, 5, 5],
@@ -1118,7 +1108,7 @@ heerich.addBox({
             This is fundamental for evaluating complex procedural decorations,
             handling adjacency logic, or driving edge-aware shading passes.
           </p>
-          <pre><code class="shj-lang-js">// Color voxels by how exposed they are
+          <pre><code >// Color voxels by how exposed they are
 heerich.forEach((voxel, pos) => {
   const n = heerich.getNeighbors(pos)
   const exposed = Object.values(n)
@@ -1132,7 +1122,7 @@ heerich.forEach((voxel, pos) => {
             completely encased shapes remain flat, while openly protruding forms
             inherit high-contrast luminance.
           </p>
-          <pre><code class="shj-lang-js">heerich.hasVoxel([3, 4, 5])   // boolean
+          <pre><code >heerich.hasVoxel([3, 4, 5])   // boolean
 heerich.getVoxel([3, 4, 5])   // voxel data or null
 heerich.forEach((voxel, pos) => { ... })
 
@@ -1190,7 +1180,7 @@ const copy = Heerich.fromJSON(json)</code></pre>
             per frame, standard voxel functions progressively toggle discrete
             coordinates — yielding snappy, pixel-aligned deconstruction.
           </p>
-          <pre><code class="shj-lang-js">const holes = [
+          <pre><code >const holes = [
   { x: 1, y: 1, targetDepth: 5 },
   { x: 5, y: 2, targetDepth: 4 },
 ]
@@ -1295,6 +1285,12 @@ function frame(now) {
         <p class="credit">
           Created by <a href="https://elastiq.ch">David Aerne</a> —
           <a href="https://github.com/meodai/heerich">GitHub</a>
+        </p>
+        <p class="credit">
+          Syntax highlighting by
+          <a href="https://sugar-high.vercel.app/">Sugar High</a>. Typeset in
+          <a href="https://fonts.google.com/specimen/Aboreto">Aboreto</a> &amp;
+          <a href="https://fonts.google.com/specimen/Work+Sans">Work Sans</a>.
         </p>
       </div>
     </footer>
