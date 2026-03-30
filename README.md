@@ -286,6 +286,20 @@ Options:
 | `append` | string | Raw SVG inserted after faces |
 | `faceAttributes` | function | Per-face attribute callback |
 
+Use `prepend` and `append` to inject SVG filters for effects like cel-shaded outlines:
+
+```js
+const svg = h.toSVG({
+  prepend: `<defs><filter id="cel">
+    <feMorphology in="SourceAlpha" operator="dilate" radius="2" result="thick"/>
+    <feFlood flood-color="#000"/>
+    <feComposite in2="thick" operator="in" result="border"/>
+    <feMerge><feMergeNode in="border"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter></defs><g filter="url(#cel)">`,
+  append: `</g>`,
+})
+```
+
 Every polygon gets data attributes for interactivity:
 
 ```

@@ -1,6 +1,11 @@
 import { Heerich } from "./src/heerich.js";
 
-export function initHero(container, getCamera, getReservedZone = null) {
+export function initHero(
+  container,
+  getCamera,
+  getReservedZone = null,
+  getSvgOpts = null,
+) {
   let animationId = 0;
   let scene = null;
   let cachedBase = null; // { engine, cols, rows, maxDepth, reservedZone }
@@ -173,10 +178,14 @@ export function initHero(container, getCamera, getReservedZone = null) {
       });
     }
 
-    return e.toSVG({
-      padding: 30,
-      faceAttributes: () => ({ "vector-effect": "non-scaling-stroke" }),
-    });
+    return e.toSVG(
+      getSvgOpts
+        ? getSvgOpts()
+        : {
+            padding: 30,
+            faceAttributes: () => ({ "vector-effect": "non-scaling-stroke" }),
+          },
+    );
   }
 
   function randomizeScene() {

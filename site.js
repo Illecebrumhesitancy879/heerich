@@ -79,6 +79,8 @@ const camGridYValue = document.getElementById("cam-grid-y-value");
 const camStroke = document.getElementById("cam-stroke");
 const camStrokeColor = document.getElementById("cam-stroke-color");
 const camFill = document.getElementById("cam-fill");
+const camOutline = document.getElementById("cam-outline");
+const camOutlineColor = document.getElementById("cam-outline-color");
 
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
@@ -187,6 +189,7 @@ const hero = initHero(
   document.getElementById("hero"),
   getCamera,
   getReservedZone,
+  getSvgOpts,
 );
 
 // Repaint hero on resize to recalculate reserved zone
@@ -273,6 +276,7 @@ document.getElementById("btn-randomize-style").addEventListener("click", () => {
   };
   camFill.value = hslToHex(h, s, l);
   camStrokeColor.value = hslToHex((h + 180) % 360, s, 100 - l);
+  camOutlineColor.value = camStrokeColor.value;
   camStroke.value = (Math.random() * 2.5).toFixed(1);
   camStroke.dispatchEvent(new Event("input", { bubbles: true }));
   syncStyleVars();
@@ -285,10 +289,21 @@ const baseStyle = {
   stroke: "var(--stroke-c)",
   strokeWidth: "var(--stroke-w)",
 };
-const svgOpts = {
-  padding: 30,
-  faceAttributes: () => ({ "vector-effect": "non-scaling-stroke" }),
-};
+function getSvgOpts() {
+  const r = parseFloat(camOutline.value);
+  if (r > 0) {
+    return {
+      padding: 30 + r * 2,
+      prepend: `<defs><filter id="cel"><feMorphology in="SourceAlpha" operator="dilate" radius="${r}" result="thick"/><feFlood flood-color="${camOutlineColor.value}"/><feComposite in2="thick" operator="in" result="border"/><feMerge><feMergeNode in="border"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><g filter="url(#cel)">`,
+      append: `</g>`,
+      faceAttributes: () => ({ "vector-effect": "non-scaling-stroke" }),
+    };
+  }
+  return {
+    padding: 30,
+    faceAttributes: () => ({ "vector-effect": "non-scaling-stroke" }),
+  };
+}
 
 // Style via CSS variables — no re-render needed
 function syncStyleVars() {
@@ -307,6 +322,12 @@ camStroke.addEventListener("input", () => {
 });
 camStrokeColor.addEventListener("input", () => syncStyleVars());
 camFill.addEventListener("input", () => syncStyleVars());
+camOutline.addEventListener("input", () => {
+  const span = camOutline.parentElement.querySelector(".control-value");
+  if (span) span.textContent = camOutline.value;
+  rerenderAll();
+});
+camOutlineColor.addEventListener("input", () => rerenderAll());
 syncStyleVars();
 
 function setupDemo(id, buildFn) {
@@ -354,7 +375,7 @@ setupDemo("demo-box", (v) => {
     style: baseStyle,
   });
   e.addBox({ position: [0, 0, 0], size: [v.w, v.h, v.d] });
-  return e.toSVG(svgOpts);
+  return e.toSVG(getSvgOpts());
 });
 
 // ─── Alignment ───────────────────────
@@ -389,7 +410,7 @@ setupDemo("demo-align", (v) => {
     style: { default: { fill: "#18191b", stroke: "var(--fill)" } },
   });
 
-  return e.toSVG(svgOpts);
+  return e.toSVG(getSvgOpts());
 });
 
 // ─── 4. Spheres ──────────────────────
@@ -401,7 +422,7 @@ setupDemo("demo-sphere", (v) => {
     style: baseStyle,
   });
   e.addSphere({ center: [r, r, r], radius: r });
-  return e.toSVG(svgOpts);
+  return e.toSVG(getSvgOpts());
 });
 
 // ─── 5. Lines ────────────────────────
@@ -421,7 +442,7 @@ setupDemo("demo-line", (v) => {
     radius: v.r,
     shape: v.shape,
   });
-  return e.toSVG(svgOpts);
+  return e.toSVG(getSvgOpts());
 });
 
 // ─── Custom shapes ──────────────────
@@ -443,7 +464,7 @@ setupDemo("demo-custom-shape", (v) => {
       return nearEdge < 3;
     },
   });
-  return e.toSVG(svgOpts);
+  return e.toSVG(getSvgOpts());
 });
 
 // ─── 6. Boolean operations ──────────────
@@ -460,7 +481,7 @@ setupDemo("demo-boolean", (v) => {
     mode: v.mode,
     style: { default: { fill: "#18191b", stroke: "var(--fill)" } },
   });
-  return e.toSVG(svgOpts);
+  return e.toSVG(getSvgOpts());
 });
 
 // ─── 7. Rotation ────────────────────────
@@ -475,7 +496,7 @@ setupDemo("demo-rotation", (v) => {
   if (v.turns > 0) {
     e.rotate({ axis: v.axis, turns: v.turns });
   }
-  return e.toSVG(svgOpts);
+  return e.toSVG(getSvgOpts());
 });
 
 // ─── 8. Grouped voxels ──────────────────
@@ -502,7 +523,7 @@ setupDemo("demo-group", (v) => {
     e.addBox({ position: [gs, i - 1, 1], size: [1, 1, 1] }); // right edge
   }
 
-  return e.toSVG(svgOpts);
+  return e.toSVG(getSvgOpts());
 });
 
 // ─── 9. Styles ───────────────────────
@@ -525,7 +546,7 @@ setupDemo("demo-style", (v) => {
       right: { fill: v.right },
     },
   });
-  return e.toSVG(svgOpts);
+  return e.toSVG(getSvgOpts());
 });
 
 // ─── 10. SVG styles ───────────────────
@@ -553,7 +574,7 @@ setupDemo("demo-svg-styles", (v) => {
     size: [4, 4, 4],
     style: { default: { opacity: 1 } },
   });
-  return e.toSVG(svgOpts);
+  return e.toSVG(getSvgOpts());
 });
 
 // ─── 11. Functional ───────────────────
@@ -584,7 +605,7 @@ setupDemo("demo-functional", (v) => {
       },
     },
   });
-  return e.toSVG(svgOpts);
+  return e.toSVG(getSvgOpts());
 });
 
 // ─── 12. Voxel scaling ──────────────────
@@ -632,7 +653,7 @@ setupDemo("demo-scale", (v) => {
     });
   }
 
-  return e.toSVG(svgOpts);
+  return e.toSVG(getSvgOpts());
 });
 
 // ─── 13. Functional scale ───────────────
@@ -659,7 +680,7 @@ setupDemo("demo-functional-scale", (v) => {
     },
     scaleOrigin: (x, y, z) => [0.5, y % 2 === 0 ? 0 : 1, 0.5],
   });
-  return e.toSVG(svgOpts);
+  return e.toSVG(getSvgOpts());
 });
 
 // ─── Content voxels ──────────────────
@@ -698,7 +719,7 @@ setupDemo("demo-functional-scale", (v) => {
       }
     }
 
-    canvas.innerHTML = e.toSVG(svgOpts);
+    canvas.innerHTML = e.toSVG(getSvgOpts());
   }
 
   render();
@@ -734,7 +755,7 @@ setupDemo("demo-functional-scale", (v) => {
     // Solid core — added after so it overwrites the cage cells in the overlap
     e.addBox({ position: [1, 1, 1], size: [3, 3, 3] });
 
-    canvas.innerHTML = e.toSVG(svgOpts);
+    canvas.innerHTML = e.toSVG(getSvgOpts());
   }
   render();
   demos.push(render);
@@ -775,7 +796,7 @@ setupDemo("demo-queries", (v) => {
     }
   });
 
-  return e.toSVG(svgOpts);
+  return e.toSVG(getSvgOpts());
 });
 
 // ─── Shared animation utilities ──────
@@ -843,7 +864,7 @@ function animateHoles({
       const d = Math.round(depths[i]);
       if (d > 0) e.removeBox({ position: [h.x, h.y, 0], size: [h.w, h.h, d] });
     });
-    return e.toSVG(svgOpts);
+    return e.toSVG(getSvgOpts());
   }
 
   function drawStatic() {
@@ -1013,7 +1034,9 @@ function animateHoles({
         const holeDepth = Math.round(depths[tower.holeIndex]);
         const fullH = Math.floor(th);
         const frac = th - fullH;
-        const startZ = tower.overflow ? holeDepth - fullH : Math.max(0, holeDepth - fullH);
+        const startZ = tower.overflow
+          ? holeDepth - fullH
+          : Math.max(0, holeDepth - fullH);
         const totalH = tower.overflow ? fullH : holeDepth - startZ;
         if (totalH > 0)
           e.addBox({
@@ -1045,10 +1068,7 @@ function animateHoles({
       });
     }
 
-    return e.toSVG({
-      padding: 30,
-      faceAttributes: () => ({ "vector-effect": "non-scaling-stroke" }),
-    });
+    return e.toSVG(getSvgOpts());
   }
 
   function animateIn() {
@@ -1197,7 +1217,7 @@ galleryDemo("demo-heerich-cross", () => {
     rotate: { axis: "x", turns: 1, center: c },
   });
 
-  return e.toSVG(svgOpts);
+  return e.toSVG(getSvgOpts());
 });
 
 // ─── Favicon from cross demo ─────────────
@@ -1258,7 +1278,7 @@ galleryDemo("demo-heerich-checker", () => {
       }
     }
   }
-  return e.toSVG(svgOpts);
+  return e.toSVG(getSvgOpts());
 });
 
 // 3. Stepped Block
@@ -1279,7 +1299,7 @@ galleryDemo("demo-heerich-stepped", () => {
   e.removeBox({ position: [0, -4, -4], size: [2, 2, 2] });
   e.removeBox({ position: [2, -4, -4], size: [2, 4, 2] });
 
-  return e.toSVG(svgOpts);
+  return e.toSVG(getSvgOpts());
 });
 
 // ─── Footer heart ────────────────────
@@ -1313,7 +1333,7 @@ galleryDemo("demo-heerich-stepped", () => {
       },
     });
 
-    heartContainer.innerHTML = e.toSVG(svgOpts);
+    heartContainer.innerHTML = e.toSVG(getSvgOpts());
   }
 
   renderHeart();
