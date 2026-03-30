@@ -474,6 +474,46 @@ setupDemo("demo-style", (v) => {
   return e.toSVG(svgOpts);
 });
 
+// ─── Voxel scaling ──────────────────
+setupDemo("demo-scale", (v) => {
+  const h = v.height;
+  const e = new Heerich({
+    tile: [30, 30],
+    camera: getCamera(),
+    style: baseStyle,
+  });
+
+  // Spiral staircase around a 2x2 hole
+  // Hole at (1,1)-(2,2), path goes clockwise
+  const path = [
+    [0, 0], [1, 0], [2, 0], [3, 0],
+    [3, 1], [3, 2], [3, 3],
+    [2, 3], [1, 3], [0, 3],
+    [0, 2], [0, 1],
+  ];
+  const total = path.length;
+
+  for (let i = 0; i < total; i++) {
+    const [px, pz] = path[i];
+    // Bottom staircase — anchored to floor
+    e.addBox({
+      position: [px, 2, pz],
+      size: [1, 1, 1],
+      scale: [1, ((i + 1) / total) * h, 1],
+      scaleOrigin: [0.5, 1, 0.5],
+    });
+    // Top staircase — anchored to ceiling (flipped origin + reversed height)
+    e.addBox({
+      position: [px, 0, pz],
+      size: [1, 1, 1],
+      scale: [1, ((i + 1) / total) * h, 1],
+      scaleOrigin: [0.5, 0, 0.5],
+    });
+  }
+
+  return e.toSVG(svgOpts);
+});
+
 // ─── 5. SVG styles ───────────────────
 setupDemo("demo-svg-styles", (v) => {
   const e = new Heerich({
