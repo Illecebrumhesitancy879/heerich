@@ -966,7 +966,7 @@ function animateHoles({
 
   function buildScene(depths, towerHeights, carveRadii) {
     const { gridSize, cols, rows, holes, towers, color, carves } = scene;
-    const maxDepth = Math.max(...depths.map((d) => Math.round(d)), 1);
+    const maxDepth = Math.max(...holes.map((h) => h.targetDepth), 1);
 
     const e = new Heerich({
       tile: [gridSize, gridSize],
@@ -983,33 +983,57 @@ function animateHoles({
     // Carve holes — style paints the newly exposed neighbor faces
     const wallFill = { fill: "var(--stroke-c)", stroke: "var(--fill)" };
     holes.forEach((h, i) => {
-      const d = Math.round(depths[i]);
-      if (d > 0)
-        e.removeBox({
-          position: [h.x, h.y, 0],
-          size: [h.w, h.h, d],
+      const d = depths[i];
+      if (d <= 0.01) return;
+      const full = Math.ceil(d);
+      const frac = d - Math.floor(d);
+      // Remove full + partial layer
+      e.removeBox({
+        position: [h.x, h.y, 0],
+        size: [h.w, h.h, full],
+        style: { default: wallFill },
+      });
+      // Add back a shrinking floor slab for the fractional part
+      if (frac > 0.01) {
+        e.addBox({
+          position: [h.x, h.y, full - 1],
+          size: [h.w, h.h, 1],
+          scale: [1, 1, 1 - frac],
+          scaleOrigin: [0.5, 0.5, 1],
           style: { default: wallFill },
         });
+      }
     });
 
     // Add towers — all faces use outline color
     if (towerHeights) {
       towers.forEach((tower, idx) => {
-        const th = Math.round(towerHeights[idx]);
-        if (th <= 0) return;
+        const th = towerHeights[idx];
+        if (th <= 0.01) return;
         const holeDepth = Math.round(depths[tower.holeIndex]);
-        const topZ = Math.max(0, holeDepth - th);
+        const fullH = Math.floor(th);
+        const frac = th - fullH;
+        const topZ = Math.max(0, holeDepth - fullH);
         const height = holeDepth - topZ;
-        // Overflow towers poke above the surface (negative z)
-        const startZ = tower.overflow ? -Math.max(0, th - holeDepth) : topZ;
-        const totalH = tower.overflow ? th : height;
-        e.addBox({
-          position: [tower.x, tower.y, startZ],
-          size: [tower.w, tower.h, totalH],
-          style: {
-            default: wallFill,
-          },
-        });
+        const startZ = tower.overflow ? -Math.max(0, fullH - holeDepth) : topZ;
+        const totalH = tower.overflow ? fullH : height;
+        if (totalH > 0)
+          e.addBox({
+            position: [tower.x, tower.y, startZ],
+            size: [tower.w, tower.h, totalH],
+            style: { default: wallFill },
+          });
+        // Fractional layer growing on top (toward lower z)
+        if (frac > 0.01) {
+          const fracZ = tower.overflow ? startZ - 1 : topZ - 1;
+          e.addBox({
+            position: [tower.x, tower.y, fracZ],
+            size: [tower.w, tower.h, 1],
+            scale: [1, 1, frac],
+            scaleOrigin: [0.5, 0.5, 0],
+            style: { default: wallFill },
+          });
+        }
       });
     }
 
