@@ -97,6 +97,12 @@ const num = (v, fallback) => {
   return Number.isNaN(n) ? fallback : n;
 };
 
+let _rerenderTimer = 0;
+function debouncedRerenderAll(ms = 100) {
+  clearTimeout(_rerenderTimer);
+  _rerenderTimer = setTimeout(rerenderAll, ms);
+}
+
 function updatePerspectiveGrid() {
   const angleMin = num(camAngle.min, 0);
   const angleMax = num(camAngle.max, 360);
@@ -325,9 +331,9 @@ camFill.addEventListener("input", () => syncStyleVars());
 camOutline.addEventListener("input", () => {
   const span = camOutline.parentElement.querySelector(".control-value");
   if (span) span.textContent = camOutline.value;
-  rerenderAll();
+  debouncedRerenderAll();
 });
-camOutlineColor.addEventListener("input", () => rerenderAll());
+camOutlineColor.addEventListener("input", () => debouncedRerenderAll());
 syncStyleVars();
 
 function setupDemo(id, buildFn) {
