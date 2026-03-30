@@ -130,11 +130,22 @@ export class Heerich {
     /** @type {Map<number, Voxel>} */
     this.voxels = new Map();
     /** @type {boolean} */
-    this._dirty = true;
+    /** @type {number} Monotonically increasing epoch — bumped on every mutation */
+    this._epoch = 0;
+    /** @type {number} Epoch at which _cachedFaces was computed */
+    this._cachedEpoch = -1;
     /** @type {Face[]|null} */
     this._cachedFaces = null;
     /** @type {SVGRenderer|null} */
     this._svgRenderer = null;
+    /** @type {boolean} */
+    this._batching = false;
+    /** @type {Set<number>} Voxel keys that changed since last getFaces */
+    this._dirtyKeys = new Set();
+    /** @type {Map<number, Object[]>} Cached 3D faces per voxel key */
+    this._faceCache3D = new Map();
+    /** @type {number} Epoch at which the full cache was last valid */
+    this._faceCacheEpoch = -1;
   }
 
   /**
@@ -160,7 +171,8 @@ export class Heerich {
         opts.distance !== undefined ? opts.distance : 10;
     }
 
-    this._dirty = true;
+    if (this._faceCache3D) this._faceCache3D.clear();
+    this._invalidate();
   }
 
   /**
@@ -175,10 +187,46 @@ export class Heerich {
     return ((x + 512) << 20) | ((y + 512) << 10) | (z + 512);
   }
 
-  /** Mark the scene as modified, clearing any cached face data. */
+  /** Mark the scene as modified. */
   _invalidate() {
-    this._dirty = true;
-    this._cachedFaces = null;
+    this._epoch++;
+    if (!this._batching) this._cachedFaces = null;
+  }
+
+  /**
+   * Mark a voxel and its 6 neighbors as needing face regeneration.
+   * @param {number} x
+   * @param {number} y
+   * @param {number} z
+   */
+  _markDirty(x, y, z) {
+    this._dirtyKeys.add(this._k(x, y, z));
+    for (const [dx, dy, dz] of ADJ) {
+      this._dirtyKeys.add(this._k(x + dx, y + dy, z + dz));
+    }
+  }
+
+  /**
+   * Current mutation epoch. Consumers can compare this against their own
+   * last-rendered epoch to know whether they need to re-render.
+   * @returns {number}
+   */
+  get epoch() {
+    return this._epoch;
+  }
+
+  /**
+   * Batch multiple operations so face recomputation is deferred until the end.
+   * @param {function(): void} fn - Operations to batch
+   */
+  batch(fn) {
+    this._batching = true;
+    try {
+      fn();
+    } finally {
+      this._batching = false;
+      this._cachedFaces = null;
+    }
   }
 
   /**
@@ -271,6 +319,7 @@ export class Heerich {
       opts.center || Heerich._bboxCenter(entries, (v) => [v.x, v.y, v.z]);
 
     this.voxels.clear();
+    this._faceCache3D.clear();
     for (const v of entries) {
       const [nx, ny, nz] = Heerich._rot90(
         v.x,
@@ -306,8 +355,11 @@ export class Heerich {
         const key = this._k(x, y, z);
         if (this.voxels.has(key)) keep.add(key);
       }
-      for (const key of this.voxels.keys()) {
-        if (!keep.has(key)) this.voxels.delete(key);
+      for (const [key, v] of this.voxels.entries()) {
+        if (!keep.has(key)) {
+          this._markDirty(v.x, v.y, v.z);
+          this.voxels.delete(key);
+        }
       }
       // Apply style to remaining voxels if provided
       if (style) {
@@ -326,6 +378,7 @@ export class Heerich {
     } else {
       for (const [x, y, z] of coords) {
         const key = this._k(x, y, z);
+        this._markDirty(x, y, z);
         if (mode === "union") {
           const voxel = {
             x,
@@ -438,6 +491,7 @@ export class Heerich {
   /** Remove all voxels. */
   clear() {
     this.voxels.clear();
+    this._faceCache3D.clear();
     this._invalidate();
   }
 
@@ -924,7 +978,7 @@ export class Heerich {
    * @returns {Face[]}
    */
   getFaces() {
-    if (!this._dirty && this._cachedFaces) {
+    if (this._cachedEpoch === this._epoch && this._cachedFaces) {
       return this._cachedFaces;
     }
 
@@ -949,10 +1003,30 @@ export class Heerich {
     const dx_norm = projection === "oblique" ? depthOffsetX / tileW : 0;
     const dy_norm = projection === "oblique" ? depthOffsetY / tileH : 0;
 
-    // First: Generate all exposed 3D Faces
+    // Incremental: only regenerate 3D faces for dirty voxels
+    const dirtyKeys = this._dirtyKeys;
+    const useIncremental = dirtyKeys.size > 0 && this._faceCache3D.size > 0;
+
+    // Remove cache entries for deleted voxels
+    if (useIncremental) {
+      for (const dk of dirtyKeys) {
+        this._faceCache3D.delete(dk);
+      }
+    }
+
     const faces3D = [];
     for (const [key, voxel] of this.voxels.entries()) {
+      // Reuse cached 3D faces for unchanged voxels
+      if (useIncremental && !dirtyKeys.has(key)) {
+        const cached = this._faceCache3D.get(key);
+        if (cached) {
+          for (let i = 0; i < cached.length; i++) faces3D.push(cached[i]);
+          continue;
+        }
+      }
+
       const { x, y, z, styles } = voxel;
+      const faceStart = faces3D.length;
 
       // Content voxels: emit a content entry instead of polygon faces
       if (voxel.content) {
@@ -962,6 +1036,7 @@ export class Heerich {
           content: voxel.content,
           _pos: [x, y, z],
         });
+        this._faceCache3D.set(key, faces3D.slice(faceStart));
         continue;
       }
 
@@ -1166,11 +1241,19 @@ export class Heerich {
             [x + 0.5, y + 0.5, z + 1],
           );
       }
+
+      // Cache this voxel's 3D faces for incremental updates
+      if (faces3D.length > faceStart) {
+        this._faceCache3D.set(key, faces3D.slice(faceStart));
+      }
     }
+
+    this._dirtyKeys.clear();
+    this._faceCacheEpoch = this._epoch;
 
     const result = this._projectAndSort(faces3D);
     this._cachedFaces = result;
-    this._dirty = false;
+    this._cachedEpoch = this._epoch;
     return result;
   }
 
@@ -1489,9 +1572,9 @@ export class Heerich {
           face.points = new Points(flat);
         }
         face.depth = depth;
-        face._px = px;
-        face._py = py;
-        face._scale = scale;
+        face._px = Math.round(px * 1e4) / 1e4;
+        face._py = Math.round(py * 1e4) / 1e4;
+        face._scale = Math.round(scale * 1e4) / 1e4;
         projectedFaces.push(face);
         continue;
       }
