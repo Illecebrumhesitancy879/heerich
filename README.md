@@ -537,16 +537,16 @@ Content voxels receive CSS custom properties `--x`, `--y`, `--z`, `--scale`, `--
 
 ## Decals
 
-Stamp arbitrary SVG onto voxel faces. Define decals in a `0–1` unit coordinate space, then reference them by name in any face style. The engine maps the content onto each projected face with an affine transform, so decals deform correctly with the camera.
+Stamp SVG paths onto voxel faces. Define decals as `<path>` elements in a `0–1` unit coordinate space, then reference them by name in any face style. The engine warps every path coordinate via bilinear interpolation onto the projected face quad — perspective-correct, no affine approximation.
 
 ```js
-// Register a decal — any SVG content in a 0–1 unit square
+// Register a decal — one or more <path> elements in 0–1 unit space
 h.defineDecal('circle', {
-  content: '<circle cx="0.5" cy="0.5" r="0.4" fill="none" stroke="#333" stroke-width="0.05"/>'
+  content: '<path d="M0.5 0 A0.5 0.5 0 1 1 0.5 1 A0.5 0.5 0 1 1 0.5 0 Z" fill="none" stroke="#333" stroke-width="1" vector-effect="non-scaling-stroke"/>'
 })
 
 // Shorthand — just the SVG string
-h.defineDecal('cross', '<path d="M0 0 L1 1 M1 0 L0 1" stroke="#333" stroke-width="0.05" fill="none"/>')
+h.defineDecal('cross', '<path d="M0 0 L1 1 M1 0 L0 1" stroke="#333" stroke-width="1" vector-effect="non-scaling-stroke" fill="none"/>')
 
 // Reference by name in any face style
 h.addGeometry({
@@ -566,7 +566,11 @@ h.addGeometry({
 })
 ```
 
-Decals are rendered as `<symbol viewBox="0 0 1 1" overflow="visible">` in `<defs>`, with a `<use>` per face. They support any SVG content — paths, text, circles, images, groups. Use `vector-effect="non-scaling-stroke"` for uniform stroke widths across faces. Decals are included in `toJSON()`/`fromJSON()` serialization.
+All SVG path commands are supported (M, L, H, V, C, S, Q, T, A, Z). Arcs are automatically converted to cubic beziers before warping. Use `vector-effect="non-scaling-stroke"` for uniform stroke widths across faces. Decals are included in `toJSON()`/`fromJSON()` serialization.
+
+**Limitations:**
+- Only `<path>` elements are currently supported. Other SVG shapes (`<circle>`, `<rect>`, `<line>`, etc.) must be converted to `<path>` before use.
+- Decals are not clipped by occlusion culling. Partially occluded faces will render their decals at full size — the painter's algorithm (back-to-front rendering) hides the overflow in most cases, but it may be visible with transparent occluders.
 
 ## Querying
 

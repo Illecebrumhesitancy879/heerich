@@ -1,4 +1,5 @@
 import { OccluderIndex } from "./bsp.js";
+import { warpPreparedContent } from "./decal-warp.js";
 
 const _kebabCache = {};
 const _styleCache = new WeakMap();
@@ -113,35 +114,9 @@ export class SVGRenderer {
     const faceAttrFn = options.faceAttributes || null;
     const decalDefs = options.decals || null;
 
-    // Collect which decals are actually used so we only emit those symbols
-    const usedDecals = new Set();
-    if (decalDefs && decalDefs.size > 0) {
-      for (let fi = 0; fi < renderFaces.length; fi++) {
-        const face = renderFaces[fi];
-        if (face.style && face.style.decal) {
-          const decal = face.style.decal;
-          usedDecals.add(typeof decal === "string" ? decal : decal.name);
-        }
-      }
-    }
-
     const parts = [
       `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${vbX} ${vbY} ${vbW} ${vbH}" style="width:100%; height:100%;">`,
     ];
-
-    // Emit <defs> with <symbol> elements for used decals
-    if (usedDecals.size > 0) {
-      parts.push("<defs>");
-      for (const name of usedDecals) {
-        const def = decalDefs.get(name);
-        if (def) {
-          parts.push(
-            `<symbol id="decal-${name}" viewBox="0 0 1 1" overflow="visible">${def.content}</symbol>`,
-          );
-        }
-      }
-      parts.push("</defs>");
-    }
 
     if (options.prepend) parts.push(options.prepend);
     parts.push(`<g transform="translate(${offset[0]}, ${offset[1]})">`);
@@ -209,28 +184,28 @@ export class SVGRenderer {
         );
       }
 
-      // Emit decal <use> if this face has a decal reference
+      // Emit warped decal paths if this face has a decal reference
       if (style && style.decal && decalDefs) {
         const decalRef = style.decal;
         const decalName =
           typeof decalRef === "string" ? decalRef : decalRef.name;
-        if (decalDefs.has(decalName)) {
-          // Affine matrix mapping unit square (0,0)-(1,1) onto the projected quad
-          // P0=d[0,1] P1=d[2,3] P2=d[4,5] P3=d[6,7]
-          // (0,0)->P0  (1,0)->P1  (0,1)->P3
-          const a = d[2] - d[0],
-            b = d[3] - d[1];
-          const c = d[6] - d[0],
-            dd = d[7] - d[1];
-          const e = d[0],
-            f = d[1];
-          let useAttrs = "";
+        const decalDef = decalDefs && decalDefs.get(decalName);
+        if (decalDef) {
+          let overrideAttrs = "";
           if (typeof decalRef === "object" && decalRef.style) {
-            useAttrs = _buildSvgAttributes(decalRef.style);
+            overrideAttrs = _buildSvgAttributes(decalRef.style);
           }
-          parts.push(
-            `<use href="#decal-${decalName}" width="1" height="1" transform="matrix(${a},${b},${c},${dd},${e},${f})"${useAttrs} />`,
-          );
+          // Bilinear warp: remap all path coordinates from 0–1 unit
+          // space onto the projected face quad — perspective-correct.
+          // Uses pre-parsed ops (no regex/parsing per frame).
+          const warped = warpPreparedContent(decalDef._prepared, d);
+          // Inject per-use style overrides + faceAttributes onto each path
+          const inject = overrideAttrs + extraAttrs;
+          if (inject) {
+            parts.push(warped.replace(/<path\b/gi, `<path${inject}`));
+          } else {
+            parts.push(warped);
+          }
         }
       }
     }

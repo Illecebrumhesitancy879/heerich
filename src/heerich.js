@@ -1,4 +1,5 @@
 import { SVGRenderer, computeBounds } from "./svg-renderer.js";
+import { prepareDecalContent } from "./decal-warp.js";
 import { Points } from "./points.js";
 import { boxCoords, sphereCoords, lineCoords, fillCoords } from "./shapes.js";
 
@@ -26,7 +27,8 @@ export { boxCoords, sphereCoords, lineCoords, fillCoords };
 
 /**
  * @typedef {Object} DecalDef
- * @property {string} content - SVG content (rendered inside a <symbol viewBox="0 0 1 1">)
+ * @property {string} content - SVG markup containing one or more <path> elements in 0–1 unit space.
+ *   Only <path> elements are supported — other shapes (circle, rect, etc.) must be converted to paths first.
  */
 
 /**
@@ -651,7 +653,7 @@ export class Heerich {
 
     if (data.decals) {
       for (const [name, def] of Object.entries(data.decals)) {
-        engine.decals.set(name, def);
+        engine.defineDecal(name, def);
       }
     }
 
@@ -708,13 +710,16 @@ export class Heerich {
   }
 
   /**
-   * Register a named decal. Content is arbitrary SVG authored in a 0–1 unit
-   * coordinate space (it will be placed inside a <symbol viewBox="0 0 1 1">).
+   * Register a named decal. Content must be one or more <path> elements
+   * authored in a 0–1 unit coordinate space. All path commands are supported
+   * (M, L, H, V, C, S, Q, T, A, Z). Other SVG shapes (circle, rect, etc.)
+   * must be converted to <path> first.
    * @param {string} name - Unique decal name
    * @param {DecalDef|string} def - Decal definition object, or raw SVG string
    */
   defineDecal(name, def) {
     if (typeof def === "string") def = { content: def };
+    def._prepared = prepareDecalContent(def.content);
     this.decals.set(name, def);
   }
 

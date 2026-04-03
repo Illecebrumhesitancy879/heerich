@@ -43,6 +43,12 @@ The entire library is a single file: `src/heerich.js`, exporting the `Heerich` c
 - Enabled in `toSVG()` via `occlusion: true` (built-in) or by providing a `resolveOcclusion` function
 - `SVGRenderer` (`src/svg-renderer.js`) processes faces front-to-back, clips against inserted occluders
 
+### Decals
+- `defineDecal(name, def)` registers named `<path>` elements in 0–1 unit space
+- `src/decal-warp.js` — bilinear interpolation warps path coordinates onto projected face quads
+- All SVG path commands supported; arcs (A) auto-converted to cubic beziers
+- Only `<path>` elements are supported (limitation); other shapes must be pre-converted
+
 ### Stateless rendering
 - `renderTest()` — renders from a test function without storing voxels (zero Map allocations). Useful for procedural/infinite scenes.
 

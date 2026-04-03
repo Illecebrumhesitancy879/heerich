@@ -630,7 +630,7 @@ setupDemo("demo-decals", (v) => {
   const ns = 'vector-effect="non-scaling-stroke"';
   e.defineDecal(
     "circle",
-    `<circle cx="0.5" cy="0.5" r="0.5" fill="none" stroke="${sc}" stroke-width="${s}" ${ns}/>`,
+    `<path d="M0.5 0 A0.5 0.5 0 1 1 0.5 1 A0.5 0.5 0 1 1 0.5 0 Z" fill="none" stroke="${sc}" stroke-width="${s}" ${ns}/>`,
   );
   e.defineDecal(
     "triangle",
