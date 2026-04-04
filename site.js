@@ -437,7 +437,8 @@ function setupDemo(id, buildFn) {
     controls[key] = el;
 
     const update = () => {
-      const span = el.closest(".control-label").querySelector(".control-value");
+      const label = el.closest(".control-label");
+      const span = label && label.querySelector(".control-value");
       if (span) span.textContent = el.value;
       render();
     };
