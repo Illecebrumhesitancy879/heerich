@@ -44,22 +44,44 @@ document.body.innerHTML = h.toSVG()
 
 ## Camera
 
-Two projection modes are available:
+The engine exposes four projection types:
+
+- **oblique** (default): Parallel projection where depth recedes at a configurable angle. Classic pixel-art / cabinet-projection look.
+- **perspective**: Single-vanishing-point projection with an explicit camera position.
+- **orthographic**: True 3D parallel projection with configurable pan (`angle`) and tilt (`pitch`). Use this for dimetric, trimetric, or any custom orthographic view.
+- **isometric**: Orthographic preset with pitch locked to 35.264°. For the classic isometric diamond grid.
 
 ```js
-// Oblique (default) — classic pixel-art look
-const h = new Heerich({
-  camera: { type: 'oblique', angle: 45, distance: 15 }
-})
+// Oblique (parallel)
+new Heerich({ camera: { type: 'oblique', angle: 45, distance: 15 } })
 
-// Perspective — vanishing-point projection
-const h = new Heerich({
-  camera: { type: 'perspective', position: [5, 5], distance: 10 }
-})
+// Perspective (1-point)
+new Heerich({ camera: { type: 'perspective', position: [5, 5], distance: 10 } })
+
+// Orthographic (parallel 3D)
+new Heerich({ camera: { type: 'orthographic', angle: 45, pitch: 35.264 } })
+
+// Isometric (orthographic with fixed pitch)
+new Heerich({ camera: { type: 'isometric', angle: 45 } })
 
 // Update camera at any time
 h.setCamera({ angle: 30, distance: 20 })
 ```
+
+### The `angle` parameter
+
+The `angle` parameter is shared across camera types for easy switching, but its meaning differs:
+
+| Type | `angle` controls | Default |
+|------|-----------------|---------|
+| `oblique` | Direction the depth (Z) axis recedes | 45° |
+| `orthographic` | Horizontal rotation (pan) around the scene | 45° |
+| `isometric` | Horizontal rotation — recommended values: 45°, 135°, 225°, 315° | 45° |
+| `perspective` | (Mapped to camera X position) | — |
+
+For isometric, any `angle` value works, but **45°, 135°, 225°, and 315°** produce the standard isometric orientations where edges align to the pixel grid.
+
+> **Note**: `orthographic` and `isometric` use parallel projection — `distance` has no effect in these modes.
 
 ## Shapes
 

@@ -30,7 +30,9 @@ function enhanceRange(input) {
   wrap.appendChild(capR);
 
   // Find the .value span — it's a sibling of the wrapper in the <label>
-  const valueSpan = wrap.parentElement.querySelector(".control-value");
+  const valueSpan = wrap
+    .closest(".control-label")
+    .querySelector(".control-value");
 
   function syncVal() {
     const min = parseFloat(input.min) || 0;
@@ -165,6 +167,16 @@ function getCamera() {
   if (proj === "oblique") {
     return { type: "oblique", angle, distance: dist };
   }
+  if (proj === "orthographic") {
+    return {
+      type: "orthographic",
+      angle: angle,
+      pitch: parseFloat(camY.value) * 3,
+    };
+  }
+  if (proj === "isometric") {
+    return { type: "isometric", angle: angle, pitch: 35.264 };
+  }
   const camX = 5 + ((angle - 180) / 180) * 12;
   return {
     type: "perspective",
@@ -224,9 +236,33 @@ function rerenderAll() {
 
 function syncControlVisibility() {
   const perspective = camProj.value === "perspective";
+  const orthographic = camProj.value === "orthographic";
+  const isometric = camProj.value === "isometric";
   camAngleLabel.style.display = perspective ? "none" : "";
-  camYLabel.style.display = "none";
+  camYLabel.style.display = orthographic ? "" : "none";
+  camDist.closest(".control-label").style.display =
+    orthographic || isometric ? "none" : "";
   camPerspectiveControl.hidden = !perspective;
+
+  if (isometric) {
+    camAngle.min = "45";
+    camAngle.max = "315";
+    camAngle.step = "90";
+    const val = parseFloat(camAngle.value) || 45;
+    camAngle.value = Math.max(
+      45,
+      Math.min(315, Math.round((val - 45) / 90) * 90 + 45),
+    );
+    const span = camAngle
+      .closest(".control-label")
+      .querySelector(".control-value");
+    if (span) span.textContent = camAngle.value;
+  } else {
+    camAngle.min = "0";
+    camAngle.max = "360";
+    camAngle.step = "1";
+  }
+
   updatePerspectiveGrid();
 }
 syncControlVisibility();
@@ -235,7 +271,7 @@ syncControlVisibility();
   const evt =
     el.tagName === "SELECT" || el.type === "checkbox" ? "change" : "input";
   el.addEventListener(evt, () => {
-    const span = el.parentElement.querySelector(".control-value");
+    const span = el.closest(".control-label").querySelector(".control-value");
     if (span && el.type !== "checkbox") span.textContent = el.value;
     if (el === camProj) syncControlVisibility();
     if (el === camAngle || el === camY) updatePerspectiveGrid();
@@ -263,12 +299,13 @@ camGrid.addEventListener("pointerdown", (event) => {
 document
   .getElementById("btn-randomize-settings")
   .addEventListener("click", () => {
-    camProj.value = Math.random() > 0.5 ? "perspective" : "oblique";
+    const projs = ["perspective", "oblique", "orthographic", "isometric"];
+    camProj.value = projs[Math.floor(Math.random() * projs.length)];
     camAngle.value = Math.round(Math.random() * 360);
     camDist.value = (2 + Math.random() * 18).toFixed(1);
     camY.value = (1 + Math.random() * 9).toFixed(1);
     [camAngle, camDist, camY].forEach((el) => {
-      const span = el.parentElement.querySelector(".control-value");
+      const span = el.closest(".control-label").querySelector(".control-value");
       if (span) span.textContent = el.value;
     });
     syncControlVisibility();
@@ -365,7 +402,9 @@ function syncStyleVars() {
   hero.repaint();
 }
 camStroke.addEventListener("input", () => {
-  const span = camStroke.parentElement.querySelector(".control-value");
+  const span = camStroke
+    .closest(".control-label")
+    .querySelector(".control-value");
   if (span) span.textContent = camStroke.value;
   syncStyleVars();
 });
@@ -379,7 +418,9 @@ document.getElementById("cam-fill-clear").addEventListener("click", () => {
   syncStyleVars();
 });
 camOutline.addEventListener("input", () => {
-  const span = camOutline.parentElement.querySelector(".control-value");
+  const span = camOutline
+    .closest(".control-label")
+    .querySelector(".control-value");
   if (span) span.textContent = camOutline.value;
   debouncedRerenderAll();
 });
@@ -396,7 +437,7 @@ function setupDemo(id, buildFn) {
     controls[key] = el;
 
     const update = () => {
-      const span = el.parentElement.querySelector(".control-value");
+      const span = el.closest(".control-label").querySelector(".control-value");
       if (span) span.textContent = el.value;
       render();
     };
@@ -1024,7 +1065,7 @@ function animateHoles({
 
   [durInput, staggerInput].forEach((el) => {
     el.addEventListener("input", () => {
-      const span = el.parentElement.querySelector(".control-value");
+      const span = el.closest(".control-label").querySelector(".control-value");
       if (span) span.textContent = el.value;
     });
   });
