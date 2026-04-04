@@ -406,6 +406,7 @@ function setupDemo(id, buildFn) {
     else if (el.tagName === "INPUT" && el.type === "color")
       el.addEventListener("input", update);
     else if (el.tagName === "SELECT") el.addEventListener("change", update);
+    else if (el.tagName === "BUTTON") el.addEventListener("click", update);
   });
 
   function render() {
@@ -641,52 +642,30 @@ setupDemo("demo-decals", (v) => {
     `<path d="M0 0 L1 1 M1 0 L0 1" fill="none" stroke="${sc}" stroke-width="${s}" stroke-linecap="round" ${ns}/>`,
   );
 
-  e.addGeometry({
-    type: "box",
-    position: [0, 0, 0],
-    size: [1, 1, 1],
-    style: {
-      top: { decal: "circle" },
-      bottom: { decal: "circle" },
-      front: { decal: "triangle" },
-      right: { decal: "cross" },
-      left: { decal: "cross" },
-    },
-  });
-  e.addGeometry({
-    type: "box",
-    position: [0, -1, 0],
-    size: [1, 1, 1],
-    style: {
-      top: { decal: "cross" },
-      front: { decal: "triangle" },
-      right: { decal: "circle" },
-      left: { decal: "circle" },
-    },
-  });
+  const names = ["circle", "triangle", "cross"];
+  const pick = () => names[Math.floor(Math.random() * names.length)];
 
-  e.addGeometry({
-    type: "box",
-    position: [0, 0, -1],
-    size: [1, 1, 1],
-    style: {
-      top: { decal: "triangle" },
-      front: { decal: "circle" },
-      right: { decal: "cross" },
-      left: { decal: "triangle" },
-    },
-  });
-  e.addGeometry({
-    type: "box",
-    position: [1, 0, 0],
-    size: [1, 1, 1],
-    style: {
-      top: { decal: "circle" },
-      front: { decal: "cross" },
-      right: { decal: "triangle" },
-      left: { decal: "triangle" },
-    },
-  });
+  const positions = [
+    [0, 0, 0],
+    [0, -1, 0],
+    [0, 0, -1],
+    [1, 0, 0],
+  ];
+
+  for (const pos of positions) {
+    e.addGeometry({
+      type: "box",
+      position: pos,
+      size: [1, 1, 1],
+      style: {
+        top: { decal: pick() },
+        bottom: { decal: pick() },
+        front: { decal: pick() },
+        right: { decal: pick() },
+        left: { decal: pick() },
+      },
+    });
+  }
 
   return e.toSVG({ ...getSvgOpts(), padding: 50 });
 });
