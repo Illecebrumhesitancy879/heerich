@@ -653,8 +653,42 @@ setupDemo("demo-decals", (v) => {
       left: { decal: "cross" },
     },
   });
+  e.addGeometry({
+    type: "box",
+    position: [0, -1, 0],
+    size: [1, 1, 1],
+    style: {
+      top: { decal: "cross" },
+      front: { decal: "triangle" },
+      right: { decal: "circle" },
+      left: { decal: "circle" },
+    },
+  });
 
-  return e.toSVG({ ...getSvgOpts(), padding: 100 });
+  e.addGeometry({
+    type: "box",
+    position: [0, 0, -1],
+    size: [1, 1, 1],
+    style: {
+      top: { decal: "triangle" },
+      front: { decal: "circle" },
+      right: { decal: "cross" },
+      left: { decal: "triangle" },
+    },
+  });
+  e.addGeometry({
+    type: "box",
+    position: [1, 0, 0],
+    size: [1, 1, 1],
+    style: {
+      top: { decal: "circle" },
+      front: { decal: "cross" },
+      right: { decal: "triangle" },
+      left: { decal: "triangle" },
+    },
+  });
+
+  return e.toSVG({ ...getSvgOpts(), padding: 50 });
 });
 
 // ─── 10. SVG styles ───────────────────
