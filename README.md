@@ -566,7 +566,7 @@ h.addGeometry({
 })
 ```
 
-All SVG path commands are supported (M, L, H, V, C, S, Q, T, A, Z). Arcs are automatically converted to cubic beziers before warping. Use `vector-effect="non-scaling-stroke"` for uniform stroke widths across faces. Decals are included in `toJSON()`/`fromJSON()` serialization.
+All SVG path commands are supported, both absolute (M, L, H, V, C, S, Q, T, A, Z) and relative (m, l, h, v, c, s, q, t, a, z). Arcs are automatically converted to cubic beziers before warping. Use `vector-effect="non-scaling-stroke"` for uniform stroke widths across faces. Decals are included in `toJSON()`/`fromJSON()` serialization.
 
 **Limitations:**
 - Only `<path>` elements are currently supported. Other SVG shapes (`<circle>`, `<rect>`, `<line>`, etc.) must be converted to `<path>` before use.

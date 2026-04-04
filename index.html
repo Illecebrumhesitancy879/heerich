@@ -796,9 +796,10 @@ scene.addGeometry({
   }
 });</code></pre>
           <p>
-            All path commands are supported (M, L, H, V, C, S, Q, T, A, Z) —
-            arcs are automatically converted to cubic beziers before warping.
-            Only <code>&lt;path&gt;</code> elements are supported for now; other
+            All path commands are supported, both absolute (M, L, H, V, C, S, Q,
+            T, A, Z) and relative (m, l, h, v, c, s, q, t, a, z) — arcs are
+            automatically converted to cubic beziers before warping. Only
+            <code>&lt;path&gt;</code> elements are supported for now; other
             shapes must be converted to paths first.
           </p>
         </div>
