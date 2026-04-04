@@ -28,7 +28,11 @@ export class OccluderIndex {
 
   /**
    * Find all previously inserted occluders whose bounding boxes overlap with the given face bounds.
-   * Useful for broad-phase rejection before performing exact clipping.
+   * @param {number} minX - Minimum x of query AABB
+   * @param {number} minY - Minimum y of query AABB
+   * @param {number} maxX - Maximum x of query AABB
+   * @param {number} maxY - Maximum y of query AABB
+   * @returns {number[][][]} Array of overlapping occluder polygons (each polygon is an array of [x,y] pairs)
    */
   getOverlapping(minX, minY, maxX, maxY) {
     const overlapping = [];
@@ -108,8 +112,13 @@ export class OccluderIndex {
   }
 
   /**
-   * Add a polygon as an occluder to the BSP tree.
+   * Add a polygon as an occluder to the spatial index.
    * Optionally provide pre-calculated bounding box to save processing time.
+   * @param {number[][]} poly - Polygon as array of [x,y] pairs
+   * @param {number} [minX] - Pre-calculated AABB min x
+   * @param {number} [minY] - Pre-calculated AABB min y
+   * @param {number} [maxX] - Pre-calculated AABB max x
+   * @param {number} [maxY] - Pre-calculated AABB max y
    */
   insert(poly, minX, minY, maxX, maxY) {
     // Enforce Clockwise (CW) winding so that the "inside" is always to the right of the edges.
@@ -155,6 +164,9 @@ export class OccluderIndex {
   /**
    * Subtracts an occluder (must be convex and CW) from a subject polygon.
    * Returns an array of fragments of the subject that reside OUTSIDE the occluder.
+   * @param {number[][]} subject - Subject polygon as array of [x,y] pairs
+   * @param {number[][]} occluder - Convex CW occluder polygon as array of [x,y] pairs
+   * @returns {number[][][]} Array of visible polygon fragments
    */
   subtractConvex(subject, occluder) {
     const fragments = [];
@@ -192,7 +204,11 @@ export class OccluderIndex {
 
   /**
    * Splits a polygon by an infinite line passing through p1 and p2.
-   * Returns { front: [...], back: [...] }.
+   * Points to the left of p1→p2 go into front, to the right into back.
+   * @param {number[][]} poly - Polygon as array of [x,y] pairs
+   * @param {number[]} p1 - First point on the splitting line
+   * @param {number[]} p2 - Second point on the splitting line
+   * @returns {{front: number[][], back: number[][]}} Front and back polygon fragments
    */
   splitPolygonByLine(poly, p1, p2) {
     const front = [];
@@ -249,6 +265,14 @@ export class OccluderIndex {
     return { front, back };
   }
 
+  /**
+   * Compute the intersection point of lines p1→p2 and p3→p4.
+   * @param {number[]} p1 - First point of line 1
+   * @param {number[]} p2 - Second point of line 1
+   * @param {number[]} p3 - First point of line 2
+   * @param {number[]} p4 - Second point of line 2
+   * @returns {number[]|null} Intersection point [x,y] or null if parallel
+   */
   lineIntersect(p1, p2, p3, p4) {
     const dx12 = p2[0] - p1[0];
     const dy12 = p2[1] - p1[1];
@@ -265,6 +289,11 @@ export class OccluderIndex {
     return [p1[0] + t * dx12, p1[1] + t * dy12];
   }
 
+  /**
+   * Compute the signed area of a polygon. Positive = CCW, negative = CW.
+   * @param {number[][]} poly - Polygon as array of [x,y] pairs
+   * @returns {number} Signed area
+   */
   calcSignedArea(poly) {
     let area = 0;
     for (let i = 0; i < poly.length; i++) {
@@ -275,6 +304,11 @@ export class OccluderIndex {
     return area / 2;
   }
 
+  /**
+   * Compute the absolute area of a polygon.
+   * @param {number[][]} poly - Polygon as array of [x,y] pairs
+   * @returns {number} Absolute area
+   */
   calcArea(poly) {
     return Math.abs(this.calcSignedArea(poly));
   }

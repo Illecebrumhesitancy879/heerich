@@ -68,8 +68,8 @@ export { boxCoords, sphereCoords, lineCoords, fillCoords };
  * @property {string} [content] - SVG content to embed
  * @property {boolean} [opaque] - Whether this voxel occludes neighbors (default true)
  * @property {Object} [meta] - Arbitrary key-value pairs for data-* attributes
- * @property {number} [scale] - Voxel scale factor
- * @property {[number,number,number]} [scaleOrigin] - Scale transform origin
+ * @property {[number,number,number]} [scale] - Per-axis scale factors [sx, sy, sz] (0-1)
+ * @property {[number,number,number]} [scaleOrigin] - Scale transform origin within voxel
  */
 
 /**
@@ -92,6 +92,9 @@ export { boxCoords, sphereCoords, lineCoords, fillCoords };
  * @property {import('./points.js').Points} points - Projected 2D polygon points
  * @property {number} depth - Depth value for sorting
  * @property {StyleObject} [style] - Resolved style for this face
+ * @property {[number,number,number][]} [vertices] - 3D polygon vertices (before projection)
+ * @property {[number,number,number]} [n] - Face normal vector (perspective/orthographic only)
+ * @property {[number,number,number]} [c] - Face center point in 3D (perspective/orthographic only)
  * @property {string} [content] - SVG content string (content faces only)
  * @property {[number,number,number]} [_pos] - Original 3D position (content faces only)
  * @property {number} [_px] - Projected 2D x (content faces only)
@@ -269,7 +272,9 @@ export class Heerich {
 
   /**
    * Compute bounding-box center of an iterable of items.
-   * `get` extracts [x,y,z] from each item.
+   * @param {Iterable<*>} items - Items to compute bounds for
+   * @param {function(*): [number,number,number]} get - Extracts [x,y,z] from each item
+   * @returns {[number,number,number]} Center of the bounding box
    */
   static _bboxCenter(items, get) {
     let minX = Infinity,
@@ -741,8 +746,8 @@ export class Heerich {
    * @param {boolean} [opts.opaque=true] - Whether voxels occlude neighbors
    * @param {Object} [opts.meta] - Key/value pairs emitted as data-* attributes
    * @param {RotateOptions} [opts.rotate] - Rotate coordinates before placement
-   * @param {[number,number,number]|function} [opts.scale] - Per-axis scale 0-1
-   * @param {[number,number,number]|function} [opts.scaleOrigin=[0.5,0,0.5]] - Scale origin
+   * @param {[number,number,number]|function(number,number,number): [number,number,number]} [opts.scale] - Per-axis scale 0-1
+   * @param {[number,number,number]|function(number,number,number): [number,number,number]} [opts.scaleOrigin=[0.5,0,0.5]] - Scale origin
    *
    * Box params: position, size
    * Sphere params: center, radius
@@ -820,7 +825,13 @@ export class Heerich {
 
   /**
    * Scale face vertices around an origin within a voxel.
-   * scale: [sx, sy, sz], origin: [ox, oy, oz] (0-1 within voxel)
+   * @param {[number,number,number][]} vertices - 3D polygon vertices
+   * @param {number} x - Voxel x position
+   * @param {number} y - Voxel y position
+   * @param {number} z - Voxel z position
+   * @param {[number,number,number]} scale - Per-axis scale factors [sx, sy, sz]
+   * @param {[number,number,number]} origin - Scale origin within voxel (0-1)
+   * @returns {[number,number,number][]} Scaled vertices
    */
   static _scaleVertices(vertices, x, y, z, scale, origin) {
     const ox = x + origin[0],

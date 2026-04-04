@@ -11,7 +11,7 @@ const _styleCache = new WeakMap();
 export class SVGRenderer {
   /**
    * Render projected faces to an SVG string.
-   * @param {import('../heerich.js').Face[]} faces - Projected, depth-sorted face array
+   * @param {import('./heerich.js').Face[]} faces - Projected, depth-sorted face array
    * @param {Object} [options]
    * @param {number} [options.padding=20] - ViewBox padding in pixels
    * @param {[number,number,number,number]} [options.viewBox] - Custom viewBox override
@@ -20,9 +20,9 @@ export class SVGRenderer {
    * @param {string} [options.append] - Raw SVG to insert after faces
    * @param {boolean} [options.occlusion=false] - Enable built-in occlusion culling (no external dependency needed)
    * @param {function(number[][], number[][][]): string|null} [options.resolveOcclusion] - Custom occlusion resolver (overrides built-in). Providing this implicitly enables occlusion.
-   * @param {function(import('../heerich.js').Face): Object|null} [options.faceAttributes] - Per-face attribute callback
+   * @param {function(import('./heerich.js').Face): Object|null} [options.faceAttributes] - Per-face attribute callback
    * @param {number} [options.tileW] - Voxel tile pixel width (for content face transforms)
-   * @param {Map<string, import('../heerich.js').DecalDef>} [options.decals] - Registered decal definitions
+   * @param {Map<string, import('./heerich.js').DecalDef>} [options.decals] - Registered decal definitions
    * @returns {string} SVG markup
    */
   render(faces, options = {}) {
@@ -219,7 +219,7 @@ export class SVGRenderer {
 
 /**
  * Compute 2D bounding box from projected faces.
- * @param {import('../heerich.js').Face[]} faces
+ * @param {import('./heerich.js').Face[]} faces
  * @returns {{x: number, y: number, w: number, h: number}}
  */
 export function computeBounds(faces) {
@@ -244,7 +244,7 @@ export function computeBounds(faces) {
 
 /**
  * Convert a style object to an SVG attribute string.
- * @param {import('../heerich.js').StyleObject} styleObj
+ * @param {import('./heerich.js').StyleObject} styleObj
  * @returns {string}
  */
 function _buildSvgAttributes(styleObj) {

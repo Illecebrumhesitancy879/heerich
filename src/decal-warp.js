@@ -19,6 +19,11 @@
 const CMD_RE = /([MLHVCSQTZAmlhvcsqtza])/;
 const NUM_RE = /[+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?/g;
 
+/**
+ * Extract all numbers from a string.
+ * @param {string} str - String containing numeric values
+ * @returns {number[]} Parsed numbers
+ */
 function parseNumbers(str) {
   const nums = [];
   let m;
@@ -27,6 +32,11 @@ function parseNumbers(str) {
   return nums;
 }
 
+/**
+ * Parse an SVG path `d` string into command/argument pairs.
+ * @param {string} d - SVG path data string
+ * @returns {{cmd: string, args: number[]}[]} Parsed path commands
+ */
 function parsePath(d) {
   const segments = d.split(CMD_RE).filter(Boolean);
   const commands = [];
@@ -47,7 +57,16 @@ const TAU = Math.PI * 2;
 
 /**
  * Convert an SVG arc to cubic bezier segments.
- * Returns array of [cp1x,cp1y, cp2x,cp2y, ex,ey] arrays.
+ * @param {number} cx - Current x position
+ * @param {number} cy - Current y position
+ * @param {number} rx - Arc x radius
+ * @param {number} ry - Arc y radius
+ * @param {number} phi - X-axis rotation in radians
+ * @param {number} largeArc - Large arc flag (0 or 1)
+ * @param {number} sweep - Sweep flag (0 or 1)
+ * @param {number} ex - End x position
+ * @param {number} ey - End y position
+ * @returns {number[][]} Array of [cp1x, cp1y, cp2x, cp2y, ex, ey] cubic bezier segments
  */
 function arcToCubics(cx, cy, rx, ry, phi, largeArc, sweep, ex, ey) {
   if (rx === 0 || ry === 0) return [[cx, cy, ex, ey, ex, ey]];
