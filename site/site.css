@@ -496,6 +496,8 @@ nav {
 nav ol {
   list-style: none;
   counter-reset: toc;
+  columns: 2;
+  column-gap: 3rem;
 }
 
 li + li {
@@ -504,6 +506,7 @@ li + li {
 
 nav li {
   counter-increment: toc;
+  white-space: nowrap;
 }
 
 nav li::before {
