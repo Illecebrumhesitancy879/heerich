@@ -5,7 +5,6 @@ import { boxCoords, sphereCoords, lineCoords, fillCoords } from "./shapes.js";
 
 export { boxCoords, sphereCoords, lineCoords, fillCoords };
 export { SVGRenderer } from "./svg-renderer.js";
-export { SVGRenderer } from "./svg-renderer.js";
 
 /**
  * @typedef {Object} StyleObject
