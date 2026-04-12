@@ -1046,7 +1046,7 @@ setupDemo("demo-find-voxels", (v) => {
         type: "box",
         position: [voxel.x, voxel.y, voxel.z],
         size: [1, 1, 1],
-        style: { default: { fill: "#e05252", stroke: "#9b2222" } },
+        style: { default: { fill: "var(--stroke-c)", stroke: "var(--fill)" } },
       });
     }
   }
@@ -1113,9 +1113,11 @@ setupDemo("demo-find-by-pos", () => {
         _posQueryEngine.getVoxelInfo(hit.voxel);
       overlay.innerHTML = bounds2D
         ? `<rect x="${bounds2D.x}" y="${bounds2D.y}" width="${bounds2D.w}" height="${bounds2D.h}"
-                fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="3 2" opacity="0.6"/>
-           <circle cx="${center2D.x}" cy="${center2D.y}" r="2.5" fill="currentColor" opacity="0.9"/>`
-        : `<circle cx="${center2D.x}" cy="${center2D.y}" r="2.5" fill="currentColor" opacity="0.9"/>`;
+                fill="none" stroke="var(--stroke-c)" stroke-width="1" vector-effect="non-scaling-stroke"/>
+           <line x1="${center2D.x - 2.5}" y1="${center2D.y - 2.5}" x2="${center2D.x + 2.5}" y2="${center2D.y + 2.5}" stroke="currentColor" stroke-width="1" vector-effect="non-scaling-stroke"/>
+           <line x1="${center2D.x + 2.5}" y1="${center2D.y - 2.5}" x2="${center2D.x - 2.5}" y2="${center2D.y + 2.5}" stroke="currentColor" stroke-width="1" vector-effect="non-scaling-stroke"/>`
+        : `<line x1="${center2D.x - 2.5}" y1="${center2D.y - 2.5}" x2="${center2D.x + 2.5}" y2="${center2D.y + 2.5}" stroke="currentColor" stroke-width="1" vector-effect="non-scaling-stroke"/>
+           <line x1="${center2D.x + 2.5}" y1="${center2D.y - 2.5}" x2="${center2D.x - 2.5}" y2="${center2D.y + 2.5}" stroke="currentColor" stroke-width="1" vector-effect="non-scaling-stroke"/>`;
 
       if (infoEl) {
         const nc = normalizedCenter2D;
