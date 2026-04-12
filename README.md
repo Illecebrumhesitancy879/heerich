@@ -605,8 +605,12 @@ All SVG path commands are supported, both absolute (M, L, H, V, C, S, Q, T, A, Z
 h.getVoxel([2, 3, 1])       // voxel data or null
 h.hasVoxel([2, 3, 1])       // boolean
 h.getNeighbors([2, 3, 1])   // { top, bottom, left, right, front, back }
+h.clear()                    // remove all voxels
+h.epoch                      // mutation counter (increments on every add/remove/style change)
 for (const voxel of h) { /* voxel.x, voxel.y, voxel.z, voxel.styles, ... */ }
 ```
+
+The instance is iterable — `for...of`, `[...h]`, and `Array.from(h)` all yield every voxel in the scene.
 
 ### `findVoxels(predicate)`
 
