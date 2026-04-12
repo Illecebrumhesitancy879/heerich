@@ -299,6 +299,7 @@ export class Heerich {
     } finally {
       this._batching = false;
       this._cachedFaces = null;
+      this._cachedRawFaces = null;
     }
   }
 
@@ -1457,8 +1458,6 @@ export class Heerich {
 
     const { cameraDistance } = this.renderOptions;
 
-    var calls = 0;
-
     for (const face of faces3D) {
       if (face.type === "content") {
         const [cx, cy, cz] = face._pos;
@@ -1503,9 +1502,6 @@ export class Heerich {
         ];
         if (projection === "oblique") {
           const flat = [];
-          if (calls++ > 100) {
-            debugger;
-          }
           for (const [vx, vy, vz] of corners) {
             flat.push(
               truncate(vx * tileW + vz * depthOffsetX),
